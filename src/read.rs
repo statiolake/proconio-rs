@@ -31,3 +31,15 @@ define_read! {
 
     (bool, read_bool)
 }
+
+pub fn read_string<R: BufRead>(buffered_source: &mut BufferedSource<R>) -> String {
+    buffered_source.next_token().collect()
+}
+
+pub fn read_chars<R: BufRead>(buffered_source: &mut BufferedSource<R>) -> Vec<char> {
+    buffered_source.next_token().collect()
+}
+
+pub fn read_bytes<R: BufRead>(buffered_source: &mut BufferedSource<R>) -> Vec<u8> {
+    buffered_source.next_token().map(|x| x as _).collect()
+}

@@ -40,4 +40,19 @@ mod tests {
         assert_eq!(m, 54);
         assert_eq!(l, -23);
     }
+
+    #[test]
+    fn input_str() {
+        let s = BufferedSource::new(BufReader::new(&b"  string   chars\nbytes"[..]));
+        input! {
+            s,
+            string: string,
+            chars: chars,
+            bytes: bytes,
+        }
+
+        assert_eq!(string, "string");
+        assert_eq!(chars, ['c', 'h', 'a', 'r', 's']);
+        assert_eq!(bytes, b"bytes");
+    }
 }
