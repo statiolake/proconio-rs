@@ -37,8 +37,11 @@ macro_rules! impl_read_source_for_primitives {
             impl ReadSource for $ty  {
                 type Output = $ty;
                 fn read(source: &mut Source) -> $ty {
-                    let s = <String as ReadSource>::read(source);
-                    s.parse().expect("failed to parse")
+                    source
+                        .next_token()
+                        .expect("failed to get token")
+                        .parse()
+                        .expect("failed to parse")
                 }
             }
         )*
