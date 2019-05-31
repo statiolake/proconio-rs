@@ -13,30 +13,36 @@ macro_rules! input {
 
 #[macro_export]
 macro_rules! input_from_source {
-    (from $source:expr, $($var:ident: $ty:ty,)*) => {
+    (from $source:expr, $($var:ident: $kind:tt,)*) => {
         let mut s = $source;
         $(
-            let $var = $crate::read_value!($ty, &mut s);
+            let $var = $crate::read_value!($kind, &mut s);
         )*
     };
 }
 
 #[macro_export]
 macro_rules! read_value {
-    ([$ty:ty, $len:expr], $source:expr) => {{
+    ([$kind:tt; $len:expr], $source:expr) => {{
         let mut res = Vec::new();
         res.reserve($len);
         for _ in 0..$len {
-            res.push(
-                <$crate::source::BufferedSource<_> as $crate::source::ReadValue<$ty>>::read_value(
-                    $source,
-                ),
-            );
+            res.push($crate::read_value!($kind, $source));
         }
+        res
     }};
-    ($ty:ty, $source:expr) => {
-        <$crate::source::BufferedSource<_> as $crate::source::ReadValue<$ty>>::read_value($source)
+    (chars, $source:expr) => {
+        $crate::read_value!(@ty Vec<char>, $source);
     };
+    (bytes, $source:expr) => {
+        $crate::read_value!(@ty Vec<u8>, $source);
+    };
+    ($ty:tt, $source:expr) => {
+        $crate::read_value!(@ty $ty, $source);
+    };
+    (@ty $ty:ty, $source:expr) => {
+        <$crate::source::BufferedSource<_> as $crate::source::ReadValue<$ty>>::read_value($source)
+    }
 }
 
 #[cfg(test)]
@@ -64,12 +70,36 @@ mod tests {
         input_from_source! {
             from source,
             string: String,
-            chars: Vec<char>,
-            bytes: Vec<u8>,
+            chars: chars,
+            bytes: bytes,
         }
 
         assert_eq!(string, "string");
         assert_eq!(chars, ['c', 'h', 'a', 'r', 's']);
         assert_eq!(bytes, b"bytes");
+    }
+
+    #[test]
+    fn input_array() {
+        let source = BufferedSource::new(BufReader::new(
+            &b"5 4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5"[..],
+        ));
+
+        input_from_source! {
+            from source,
+            n: usize,
+            m: usize,
+            a: [[i32; n]; m],
+        }
+
+        assert_eq!(
+            a,
+            [
+                [1, 2, 3, 4, 5],
+                [1, 2, 3, 4, 5],
+                [1, 2, 3, 4, 5],
+                [1, 2, 3, 4, 5]
+            ]
+        );
     }
 }
