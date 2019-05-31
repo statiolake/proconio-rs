@@ -1,24 +1,22 @@
-use std::io::{BufRead, Read as _};
+use std::str::SplitWhitespace;
 
 /// User input source.  If you use `input!` it obtains stdin, or if you use
 /// `input_from_source!` it obtains the specified source.
-pub struct Source<R: BufRead> {
-    source: R,
+pub struct Source<'a> {
+    tokens: SplitWhitespace<'a>,
 }
 
-impl<R: BufRead> Source<R> {
+impl Source<'_> {
     /// Creates `Source` using specified reader of `BufRead`.
-    pub fn new(source: R) -> Source<R> {
-        Source { source }
+    pub fn new(source: &str) -> Source {
+        Source {
+            tokens: source.split_whitespace(),
+        }
     }
 
     /// Gets a next token.  Return type is currently the iterator of `char`.
-    pub fn next_token<'a>(&'a mut self) -> impl Iterator<Item = char> + 'a {
-        (&mut self.source)
-            .bytes()
-            .map(|x| x.expect("failed to read from source") as char)
-            .skip_while(|x| x.is_whitespace())
-            .take_while(|x| !x.is_whitespace())
+    pub fn next_token(&mut self) -> Option<&str> {
+        self.tokens.next()
     }
 }
 
@@ -30,5 +28,5 @@ impl<R: BufRead> Source<R> {
 /// implements `ReadSource` if all members of your type are `ReadSource`.
 pub trait ReadSource {
     type Output;
-    fn read<R: BufRead>(source: &mut Source<R>) -> Self::Output;
+    fn read(source: &mut Source) -> Self::Output;
 }

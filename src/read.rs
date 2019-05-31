@@ -1,26 +1,33 @@
 use crate::source::{ReadSource, Source};
-use std::io::BufRead;
 
 impl ReadSource for String {
     type Output = String;
-    fn read<R: BufRead>(source: &mut Source<R>) -> String {
-        source.next_token().collect()
+    fn read(source: &mut Source) -> String {
+        source.next_token().expect("failed to get token").into()
     }
 }
 
 pub type Chars = Vec<char>;
 impl ReadSource for Chars {
     type Output = Chars;
-    fn read<R: BufRead>(source: &mut Source<R>) -> Chars {
-        source.next_token().collect()
+    fn read(source: &mut Source) -> Chars {
+        source
+            .next_token()
+            .expect("failed to get token")
+            .chars()
+            .collect()
     }
 }
 
 pub type Bytes = Vec<u8>;
 impl ReadSource for Bytes {
     type Output = Bytes;
-    fn read<R: BufRead>(source: &mut Source<R>) -> Bytes {
-        source.next_token().map(|x| x as _).collect()
+    fn read(source: &mut Source) -> Bytes {
+        source
+            .next_token()
+            .expect("failed to get token")
+            .bytes()
+            .collect()
     }
 }
 
@@ -29,7 +36,7 @@ macro_rules! impl_read_source_for_primitives {
         $(
             impl ReadSource for $ty  {
                 type Output = $ty;
-                fn read<R: BufRead>(source: &mut Source<R>) -> $ty {
+                fn read(source: &mut Source) -> $ty {
                     let s = <String as ReadSource>::read(source);
                     s.parse().expect("failed to parse")
                 }

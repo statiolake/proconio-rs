@@ -77,7 +77,7 @@ pub fn read_derive(input: TokenStream) -> TokenStream {
     let gen = quote! {
         impl proconio::source::ReadSource for #name {
             type Output = #name;
-            fn read<R: std::io::BufRead>(source: &mut proconio::source::Source<R>) -> #name {
+            fn read(source: &mut proconio::source::Source) -> #name {
                 #(#read)*
                 #generate
             }
