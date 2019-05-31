@@ -1,0 +1,13 @@
+[package]
+name = "proconio-derive"
+version = "0.1.0"
+authors = ["statiolake <statiolake@gmail.com>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "0.6.12"
+syn = "0.15.34"
+proc-macro2 = "0.4.30"
