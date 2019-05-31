@@ -1,6 +1,7 @@
 #![feature(concat_idents)]
 
 pub mod read;
+pub mod source;
 
 #[macro_export]
 macro_rules! input {
@@ -23,21 +24,20 @@ macro_rules! input {
 
 #[cfg(test)]
 mod tests {
+    use crate::source::BufferedSource;
     use std::io::BufReader;
     #[test]
     fn input_number() {
-        let s = BufReader::new(&b"    32   54 -23\r\r\n\nfalse"[..]);
+        let s = BufferedSource::new(BufReader::new(&b"    32   54 -23\r\r\n\nfalse"[..]));
         input! {
             s,
             n: u32,
             m: u32,
             l: i32,
-            b: bool,
         }
 
         assert_eq!(n, 32);
         assert_eq!(m, 54);
         assert_eq!(l, -23);
-        assert_eq!(b, false);
     }
 }

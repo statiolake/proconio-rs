@@ -1,25 +1,12 @@
-use std::io::{BufRead, Read};
-
-fn next_token<'a, R>(buffered_source: &'a mut R) -> impl Iterator<Item = char> + 'a
-where
-    &'a mut R: BufRead,
-{
-    buffered_source
-        .bytes()
-        .map(|x| x.expect("failed to read from stdin") as char)
-        .skip_while(|x| x.is_whitespace())
-        .take_while(|x| !x.is_whitespace())
-}
+use crate::source::BufferedSource;
+use std::io::BufRead;
 
 macro_rules! define_read {
     ($(($ty:ty, $fnname:ident))*) => {
         $(
             #[inline]
-            pub fn $fnname<'a, R>(buffered_source: &'a mut R) -> $ty
-            where
-                &'a mut R: BufRead,
-            {
-                let number = next_token(buffered_source);
+            pub fn $fnname<R: BufRead>(buffered_source: &mut BufferedSource<R>) -> $ty {
+                let number = buffered_source.next_token();
                 let number: String = number.collect();
                 number.parse().expect("failed to parse")
             }
