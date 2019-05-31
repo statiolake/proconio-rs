@@ -1,24 +1,36 @@
-#![feature(concat_idents)]
-
 pub mod read;
 pub mod source;
 
 #[macro_export]
 macro_rules! input {
-    (from $source:expr, $($var:ident: $ty:ident,)*) => {
+    (from $source:expr, $($var:ident: $ty:ty,)*) => {
         let mut s = $source;
         $(
-            let $var = {
-                use $crate::read::*;
-                concat_idents!(read_, $ty)(&mut s)
-            };
+            let $var = $crate::read_value!($ty, &mut s);
         )*
     };
     ($(rest:tt)*) => {
-        use std::io::Read as _;
         let stdin = std::io::stdin();
         let stdin = stdin.lock();
         input!(stdin; $(rest)* );
+    };
+}
+
+#[macro_export]
+macro_rules! read_value {
+    ([$ty:ty, $len:expr], $source:expr) => {{
+        let mut res = Vec::new();
+        res.reserve($len);
+        for _ in 0..$len {
+            res.push(
+                <$crate::source::BufferedSource<_> as $crate::source::ReadValue<$ty>>::read_value(
+                    $source,
+                ),
+            );
+        }
+    }};
+    ($ty:ty, $source:expr) => {
+        <$crate::source::BufferedSource<_> as $crate::source::ReadValue<$ty>>::read_value($source)
     };
 }
 
@@ -31,7 +43,7 @@ mod tests {
         let source = BufferedSource::new(BufReader::new(&b"    32   54 -23\r\r\n\nfalse"[..]));
         input! {
             from source,
-            n: u32,
+            n: u8,
             m: u32,
             l: i32,
         }
@@ -46,9 +58,9 @@ mod tests {
         let source = BufferedSource::new(BufReader::new(&b"  string   chars\nbytes"[..]));
         input! {
             from source,
-            string: string,
-            chars: chars,
-            bytes: bytes,
+            string: String,
+            chars: Vec<char>,
+            bytes: Vec<u8>,
         }
 
         assert_eq!(string, "string");

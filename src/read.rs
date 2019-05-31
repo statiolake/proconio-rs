@@ -1,45 +1,39 @@
-use crate::source::BufferedSource;
+use crate::source::{BufferedSource, ReadValue};
 use std::io::BufRead;
 
-macro_rules! define_read {
-    ($(($ty:ty, $fnname:ident))*) => {
+impl<R: BufRead> ReadValue<String> for BufferedSource<R> {
+    fn read_value(&mut self) -> String {
+        self.next_token().collect()
+    }
+}
+
+impl<R: BufRead> ReadValue<Vec<char>> for BufferedSource<R> {
+    fn read_value(&mut self) -> Vec<char> {
+        self.next_token().collect()
+    }
+}
+
+impl<R: BufRead> ReadValue<Vec<u8>> for BufferedSource<R> {
+    fn read_value(&mut self) -> Vec<u8> {
+        self.next_token().map(|x| x as _).collect()
+    }
+}
+
+macro_rules! impl_read_value_for_primitives {
+    ($($ty:ty)*) => {
         $(
-            #[inline]
-            pub fn $fnname<R: BufRead>(buffered_source: &mut BufferedSource<R>) -> $ty {
-                let number = buffered_source.next_token();
-                let number: String = number.collect();
-                number.parse().expect("failed to parse")
+        impl<R: BufRead> ReadValue<$ty> for BufferedSource<R> {
+            fn read_value(&mut self) -> $ty {
+                let s: String = self.read_value();
+                s.parse().expect("failed to parse")
             }
+        }
         )*
-    };
+    }
 }
 
-define_read! {
-    (u8, read_u8)
-    (u16, read_u16)
-    (u32, read_u32)
-    (u64, read_u64)
-    (u128, read_u128)
-    (usize, read_usize)
-
-    (i8, read_i8)
-    (i16, read_i16)
-    (i32, read_i32)
-    (i64, read_i64)
-    (i128, read_i128)
-    (isize, read_isize)
-
-    (bool, read_bool)
-}
-
-pub fn read_string<R: BufRead>(buffered_source: &mut BufferedSource<R>) -> String {
-    buffered_source.next_token().collect()
-}
-
-pub fn read_chars<R: BufRead>(buffered_source: &mut BufferedSource<R>) -> Vec<char> {
-    buffered_source.next_token().collect()
-}
-
-pub fn read_bytes<R: BufRead>(buffered_source: &mut BufferedSource<R>) -> Vec<u8> {
-    buffered_source.next_token().map(|x| x as _).collect()
+impl_read_value_for_primitives! {
+    u8 u16 u32 u64 u128 usize
+    i8 i16 i32 i64 i128 isize
+    char bool f32 f64
 }
