@@ -1,6 +1,7 @@
 pub mod read;
 pub mod source;
 
+/// read input from stdin.
 #[macro_export]
 macro_rules! input {
     ($($rest:tt)*) => {
@@ -11,6 +12,7 @@ macro_rules! input {
     };
 }
 
+/// read input from specified source.
 #[macro_export]
 macro_rules! input_from_source {
     (from $source:expr, $($var:ident: $kind:tt,)*) => {
@@ -21,8 +23,10 @@ macro_rules! input_from_source {
     };
 }
 
+#[doc(hidden)]
 #[macro_export]
 macro_rules! read_value {
+    // array
     ([$kind:tt; $len:expr]; $source:expr) => {{
         let mut res = Vec::new();
         res.reserve($len);
@@ -31,20 +35,30 @@ macro_rules! read_value {
         }
         res
     }};
+
+    // tuple
     (($($kind:tt),*); $source:expr) => {
         (
             $($crate::read_value!($kind; $source),)*
         )
     };
+
+    // Chars: Vec<char>
     (Chars; $source:expr) => {
         $crate::read_value!(@ty $crate::read::Chars; $source);
     };
+
+    // Bytes: Vec<u8>
     (Bytes; $source:expr) => {
         $crate::read_value!(@ty $crate::read::Bytes; $source);
     };
+
+    // normal other
     ($ty:tt; $source:expr) => {
         $crate::read_value!(@ty $ty; $source);
     };
+
+    // actual reading
     (@ty $ty:ty; $source:expr) => {
         <$ty as $crate::source::ReadSource>::read($source)
     }
@@ -58,6 +72,7 @@ mod tests {
     #[test]
     fn input_number() {
         let source = Source::new(BufReader::new(&b"    32   54 -23\r\r\n\nfalse"[..]));
+
         input_from_source! {
             from source,
             n: u8,
@@ -73,6 +88,7 @@ mod tests {
     #[test]
     fn input_str() {
         let source = Source::new(BufReader::new(&b"  string   chars\nbytes"[..]));
+
         input_from_source! {
             from source,
             string: String,
@@ -114,6 +130,7 @@ mod tests {
         let source = Source::new(BufReader::new(
             &b"4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5"[..],
         ));
+
         input_from_source! {
             from source,
             n: usize,
