@@ -17,7 +17,7 @@ macro_rules! input {
 /// read input from specified source.
 #[macro_export]
 macro_rules! input_from_source {
-    (from $source:expr, $($var:ident: $kind:tt,)*) => {
+    (from $source:expr, $($var:ident: $kind:tt),* $(,)?) => {
         let mut s = $source;
         $(
             let $var = $crate::read_value!($kind; &mut s);
@@ -110,7 +110,7 @@ mod tests {
             from source,
             n: usize,
             m: usize,
-            a: [[i32; n]; m],
+            a: [[i32; n]; m] // no trailing comma is OK
         }
 
         assert_eq!(
