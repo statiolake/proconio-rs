@@ -14,7 +14,12 @@ impl Source<'_> {
         }
     }
 
-    /// Gets a next token.  Return type is currently the iterator of `char`.
+    /// Force gets a next token.
+    pub fn next_token_unwrap(&mut self) -> &str {
+        self.next_token().expect("failed to get token")
+    }
+
+    /// Gets a next token.
     pub fn next_token(&mut self) -> Option<&str> {
         self.tokens.next()
     }
