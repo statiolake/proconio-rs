@@ -6,7 +6,7 @@ macro_rules! input {
     ($($rest:tt)*) => {
         let stdin = std::io::stdin();
         let stdin = stdin.lock();
-        let stdin = $crate::source::BufferedSource::new(stdin);
+        let stdin = $crate::source::Source::new(stdin);
         $crate::input_from_source!(from stdin, $($rest)* );
     };
 }
@@ -36,27 +36,28 @@ macro_rules! read_value {
             $($crate::read_value!($kind; $source),)*
         )
     };
-    (chars; $source:expr) => {
-        $crate::read_value!(@ty Vec<char>; $source);
+    (Chars; $source:expr) => {
+        $crate::read_value!(@ty $crate::read::Chars; $source);
     };
-    (bytes; $source:expr) => {
-        $crate::read_value!(@ty Vec<u8>; $source);
+    (Bytes; $source:expr) => {
+        $crate::read_value!(@ty $crate::read::Bytes; $source);
     };
     ($ty:tt; $source:expr) => {
         $crate::read_value!(@ty $ty; $source);
     };
     (@ty $ty:ty; $source:expr) => {
-        <$crate::source::BufferedSource<_> as $crate::source::ReadValue<$ty>>::read_value($source)
+        <$ty as $crate::source::ReadSource>::read($source)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::source::BufferedSource;
+    use crate::source::Source;
     use std::io::BufReader;
+
     #[test]
     fn input_number() {
-        let source = BufferedSource::new(BufReader::new(&b"    32   54 -23\r\r\n\nfalse"[..]));
+        let source = Source::new(BufReader::new(&b"    32   54 -23\r\r\n\nfalse"[..]));
         input_from_source! {
             from source,
             n: u8,
@@ -71,12 +72,12 @@ mod tests {
 
     #[test]
     fn input_str() {
-        let source = BufferedSource::new(BufReader::new(&b"  string   chars\nbytes"[..]));
+        let source = Source::new(BufReader::new(&b"  string   chars\nbytes"[..]));
         input_from_source! {
             from source,
             string: String,
-            chars: chars,
-            bytes: bytes,
+            chars: Chars,
+            bytes: Bytes,
         }
 
         assert_eq!(string, "string");
@@ -86,7 +87,7 @@ mod tests {
 
     #[test]
     fn input_array() {
-        let source = BufferedSource::new(BufReader::new(
+        let source = Source::new(BufReader::new(
             &b"5 4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5"[..],
         ));
 
@@ -110,7 +111,7 @@ mod tests {
 
     #[test]
     fn input_tuple() {
-        let source = BufferedSource::new(BufReader::new(
+        let source = Source::new(BufReader::new(
             &b"4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5"[..],
         ));
         input_from_source! {
