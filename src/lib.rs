@@ -16,31 +16,36 @@ macro_rules! input_from_source {
     (from $source:expr, $($var:ident: $kind:tt,)*) => {
         let mut s = $source;
         $(
-            let $var = $crate::read_value!($kind, &mut s);
+            let $var = $crate::read_value!($kind; &mut s);
         )*
     };
 }
 
 #[macro_export]
 macro_rules! read_value {
-    ([$kind:tt; $len:expr], $source:expr) => {{
+    ([$kind:tt; $len:expr]; $source:expr) => {{
         let mut res = Vec::new();
         res.reserve($len);
         for _ in 0..$len {
-            res.push($crate::read_value!($kind, $source));
+            res.push($crate::read_value!($kind; $source));
         }
         res
     }};
-    (chars, $source:expr) => {
-        $crate::read_value!(@ty Vec<char>, $source);
+    (($($kind:tt),*); $source:expr) => {
+        (
+            $($crate::read_value!($kind; $source),)*
+        )
     };
-    (bytes, $source:expr) => {
-        $crate::read_value!(@ty Vec<u8>, $source);
+    (chars; $source:expr) => {
+        $crate::read_value!(@ty Vec<char>; $source);
     };
-    ($ty:tt, $source:expr) => {
-        $crate::read_value!(@ty $ty, $source);
+    (bytes; $source:expr) => {
+        $crate::read_value!(@ty Vec<u8>; $source);
     };
-    (@ty $ty:ty, $source:expr) => {
+    ($ty:tt; $source:expr) => {
+        $crate::read_value!(@ty $ty; $source);
+    };
+    (@ty $ty:ty; $source:expr) => {
         <$crate::source::BufferedSource<_> as $crate::source::ReadValue<$ty>>::read_value($source)
     }
 }
@@ -99,6 +104,28 @@ mod tests {
                 [1, 2, 3, 4, 5],
                 [1, 2, 3, 4, 5],
                 [1, 2, 3, 4, 5]
+            ]
+        );
+    }
+
+    #[test]
+    fn input_tuple() {
+        let source = BufferedSource::new(BufReader::new(
+            &b"4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5"[..],
+        ));
+        input_from_source! {
+            from source,
+            n: usize,
+            t: [(i32, i32, i32, i32, i32); n],
+        }
+
+        assert_eq!(
+            t,
+            [
+                (1, 2, 3, 4, 5),
+                (1, 2, 3, 4, 5),
+                (1, 2, 3, 4, 5),
+                (1, 2, 3, 4, 5)
             ]
         );
     }
