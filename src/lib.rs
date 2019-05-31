@@ -16,9 +16,9 @@ macro_rules! input {
     };
     ($(rest:tt)*) => {
         use std::io::Read as _;
-        let __stdin = std::io::stdin();
-        let __stdin = __stdin.lock();
-        input!(__stdin; $(rest)* );
+        let stdin = std::io::stdin();
+        let stdin = stdin.lock();
+        input!(stdin; $(rest)* );
     };
 }
 
