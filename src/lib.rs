@@ -5,7 +5,7 @@ pub mod source;
 
 #[macro_export]
 macro_rules! input {
-    ($source:expr, $($var:ident: $ty:ident,)*) => {
+    (from $source:expr, $($var:ident: $ty:ident,)*) => {
         let mut s = $source;
         $(
             let $var = {
@@ -28,9 +28,9 @@ mod tests {
     use std::io::BufReader;
     #[test]
     fn input_number() {
-        let s = BufferedSource::new(BufReader::new(&b"    32   54 -23\r\r\n\nfalse"[..]));
+        let source = BufferedSource::new(BufReader::new(&b"    32   54 -23\r\r\n\nfalse"[..]));
         input! {
-            s,
+            from source,
             n: u32,
             m: u32,
             l: i32,
@@ -43,9 +43,9 @@ mod tests {
 
     #[test]
     fn input_str() {
-        let s = BufferedSource::new(BufReader::new(&b"  string   chars\nbytes"[..]));
+        let source = BufferedSource::new(BufReader::new(&b"  string   chars\nbytes"[..]));
         input! {
-            s,
+            from source,
             string: string,
             chars: chars,
             bytes: bytes,
