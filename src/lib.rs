@@ -3,16 +3,21 @@ pub mod source;
 
 #[macro_export]
 macro_rules! input {
+    ($($rest:tt)*) => {
+        let stdin = std::io::stdin();
+        let stdin = stdin.lock();
+        let stdin = $crate::source::BufferedSource::new(stdin);
+        $crate::input_from_source!(from stdin, $($rest)* );
+    };
+}
+
+#[macro_export]
+macro_rules! input_from_source {
     (from $source:expr, $($var:ident: $ty:ty,)*) => {
         let mut s = $source;
         $(
             let $var = $crate::read_value!($ty, &mut s);
         )*
-    };
-    ($(rest:tt)*) => {
-        let stdin = std::io::stdin();
-        let stdin = stdin.lock();
-        input!(stdin; $(rest)* );
     };
 }
 
@@ -41,7 +46,7 @@ mod tests {
     #[test]
     fn input_number() {
         let source = BufferedSource::new(BufReader::new(&b"    32   54 -23\r\r\n\nfalse"[..]));
-        input! {
+        input_from_source! {
             from source,
             n: u8,
             m: u32,
@@ -56,7 +61,7 @@ mod tests {
     #[test]
     fn input_str() {
         let source = BufferedSource::new(BufReader::new(&b"  string   chars\nbytes"[..]));
-        input! {
+        input_from_source! {
             from source,
             string: String,
             chars: Vec<char>,
