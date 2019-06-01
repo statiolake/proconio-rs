@@ -1,4 +1,5 @@
 use crate::source::{ReadSource, Source};
+use crate::types::{Bytes, Chars};
 use std::io::BufRead;
 
 impl ReadSource for String {
@@ -8,7 +9,6 @@ impl ReadSource for String {
     }
 }
 
-pub type Chars = Vec<char>;
 impl ReadSource for Chars {
     type Output = Chars;
     fn read<R: BufRead>(source: &mut Source<R>) -> Chars {
@@ -16,7 +16,6 @@ impl ReadSource for Chars {
     }
 }
 
-pub type Bytes = Vec<u8>;
 impl ReadSource for Bytes {
     type Output = Bytes;
     fn read<R: BufRead>(source: &mut Source<R>) -> Bytes {
