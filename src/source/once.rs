@@ -1,17 +1,46 @@
+use std::io::BufRead;
+use std::marker::PhantomData;
 use std::str::SplitWhitespace;
 
 /// User input source.  If you use `input!` it obtains stdin, or if you use
 /// `input_from_source!` it obtains the specified source.
-pub struct Source<'a> {
-    tokens: SplitWhitespace<'a>,
+pub struct Source<R: BufRead> {
+    context: Box<str>,
+
+    // Of course this is not 'static actually, but it is always valid reference
+    // while entire `Source` is alive.  The actual lifetime is the context's
+    // inner lifetime, and it is essentially the lifetime of self.  Also note
+    // that there is no way to separate context and tokens since they are both
+    // private field.
+    //
+    // FIXME: find nicer way.
+    tokens: SplitWhitespace<'static>,
+
+    _read: PhantomData<R>,
 }
 
-impl Source<'_> {
+impl<R: BufRead> Source<R> {
     /// Creates `Source` using specified reader of `BufRead`.
-    pub fn new(source: &str) -> Source {
-        Source {
-            tokens: source.split_whitespace(),
-        }
+    pub fn new(mut source: R) -> Source<R> {
+        let mut context = String::new();
+        source
+            .read_to_string(&mut context)
+            .expect("failed to read from stdin");
+
+        // Boxed str is no need to check to pin.
+        let context = context.into_boxed_str();
+
+        let mut res = Source {
+            context,
+            tokens: "".split_whitespace(),
+            _read: PhantomData,
+        };
+
+        let self_reference: &'static str = unsafe { &*(&*res.context as *const str) };
+
+        std::mem::replace(&mut res.tokens, self_reference.split_whitespace());
+
+        res
     }
 
     /// Force gets a next token.
@@ -22,5 +51,12 @@ impl Source<'_> {
     /// Gets a next token.
     pub fn next_token(&mut self) -> Option<&str> {
         self.tokens.next()
+    }
+}
+
+use std::io::BufReader;
+impl Source<BufReader<&[u8]>> {
+    pub fn from_str(s: &str) -> Source<BufReader<&[u8]>> {
+        Source::new(BufReader::new(s.as_bytes()))
     }
 }

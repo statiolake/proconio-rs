@@ -5,11 +5,10 @@ pub mod source;
 #[macro_export]
 macro_rules! input {
     ($($rest:tt)*) => {
-        use std::io::Read as _;
-        let mut stdin = Vec::new();
-        std::io::stdin().read_to_end(&mut stdin).expect("failed to read from stdin");
-        let stdin = unsafe { String::from_utf8_unchecked(stdin) };
-        let source = $crate::source::Source::new(&stdin);
+        use std::io::{BufReader, Read as _};
+        let stdin = std::io::stdin();
+        let stdin = stdin.lock();
+        let source = $crate::source::Source::new(stdin);
         $crate::input_from_source!(from source, $($rest)* );
     };
 }
@@ -72,7 +71,7 @@ mod tests {
 
     #[test]
     fn input_number() {
-        let source = Source::new("    32   54 -23\r\r\n\nfalse");
+        let source = Source::from_str("    32   54 -23\r\r\n\nfalse");
 
         input_from_source! {
             from source,
@@ -88,7 +87,7 @@ mod tests {
 
     #[test]
     fn input_str() {
-        let source = Source::new("  string   chars\nbytes");
+        let source = Source::from_str("  string   chars\nbytes");
 
         input_from_source! {
             from source,
@@ -104,7 +103,7 @@ mod tests {
 
     #[test]
     fn input_array() {
-        let source = Source::new("5 4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
+        let source = Source::from_str("5 4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
 
         input_from_source! {
             from source,
@@ -126,7 +125,7 @@ mod tests {
 
     #[test]
     fn input_tuple() {
-        let source = Source::new("4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
+        let source = Source::from_str("4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
 
         input_from_source! {
             from source,
