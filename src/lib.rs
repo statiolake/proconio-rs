@@ -143,4 +143,24 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn input_multiple_times() {
+        let mut source = Source::from_str("4 1 2 3 4 1 2 3 4");
+
+        input_from_source! {
+            from &mut source,
+            n: usize,
+        }
+
+        for i in 0..n {
+            input_from_source! {
+                from &mut source,
+                j: i32, k: i32,
+            }
+
+            assert_eq!(j, if i % 2 == 0 { 1 } else { 3 });
+            assert_eq!(k, if i % 2 == 0 { 2 } else { 4 });
+        }
+    }
 }
