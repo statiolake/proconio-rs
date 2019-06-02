@@ -1,7 +1,6 @@
 pub mod line;
 pub mod once;
 
-// TODO: this should be inverted
 #[cfg(debug_assertions)]
 pub use self::line::Source;
 #[cfg(not(debug_assertions))]
