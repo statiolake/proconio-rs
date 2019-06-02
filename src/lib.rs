@@ -2,27 +2,33 @@ pub mod read;
 pub mod source;
 pub mod types;
 
+use crate::source::Source;
+use lazy_static::lazy_static;
+use std::io;
+use std::io::{BufReader, Stdin};
+use std::sync::Mutex;
+
+lazy_static! {
+    pub static ref STDIN_SOURCE: Mutex<Source<BufReader<Stdin>>> =
+        Mutex::new(Source::new(BufReader::new(io::stdin())));
+}
+
 /// read input from stdin.
 #[macro_export]
 macro_rules! input {
-    ($($rest:tt)*) => {
-        use std::io::{BufReader, Read as _};
-        let stdin = std::io::stdin();
-        let stdin = stdin.lock();
-        let source = $crate::source::Source::new(stdin);
-        $crate::input_from_source!(from source, $($rest)* );
-    };
-}
-
-/// read input from specified source.
-#[macro_export]
-macro_rules! input_from_source {
     (from $source:expr, $($var:ident: $kind:tt),* $(,)?) => {
         let mut s = $source;
         $(
             let $var = $crate::read_value!($kind; &mut s);
         )*
-        drop(s);
+    };
+    ($($rest:tt)*) => {
+        let mut locked_stdin = $crate::STDIN_SOURCE.lock().expect("failed to lock the stdin");
+        input! {
+            from &mut *locked_stdin,
+            $($rest)*
+        };
+        drop(locked_stdin); // release the lock
     };
 }
 
@@ -75,7 +81,7 @@ mod tests {
     fn input_number() {
         let source = Source::from_str("    32   54 -23\r\r\n\nfalse");
 
-        input_from_source! {
+        input! {
             from source,
             n: u8,
             m: u32,
@@ -91,7 +97,7 @@ mod tests {
     fn input_str() {
         let source = Source::from_str("  string   chars\nbytes");
 
-        input_from_source! {
+        input! {
             from source,
             string: String,
             chars: Chars,
@@ -107,7 +113,7 @@ mod tests {
     fn input_array() {
         let source = Source::from_str("5 4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
 
-        input_from_source! {
+        input! {
             from source,
             n: usize,
             m: usize,
@@ -129,7 +135,7 @@ mod tests {
     fn input_tuple() {
         let source = Source::from_str("4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
 
-        input_from_source! {
+        input! {
             from source,
             n: usize,
             t: [(i32, i32, i32, i32, i32); n],
@@ -150,13 +156,13 @@ mod tests {
     fn input_multiple_times() {
         let mut source = Source::from_str("4 1 2 3 4\n1 2\r\n\r\r\n3 4");
 
-        input_from_source! {
+        input! {
             from &mut source,
             n: usize,
         }
 
         for i in 0..n {
-            input_from_source! {
+            input! {
                 from &mut source,
                 j: i32, k: i32,
             }

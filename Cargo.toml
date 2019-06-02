@@ -8,5 +8,6 @@ edition = "2018"
 
 [dependencies]
 proconio-derive = { path = "proconio-derive" }
+lazy_static = "1.3.0"
 
 [workspace]

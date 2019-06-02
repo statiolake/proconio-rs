@@ -1,11 +1,8 @@
 use proconio::input;
-// use proconio::source::Source;
 
 #[test]
 #[ignore]
 fn main() {
-    // let stdin = std::io::stdin();
-    // let mut source = Source::new(stdin.lock());
     input! {
         n: usize,
     }

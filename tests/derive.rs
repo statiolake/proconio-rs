@@ -1,4 +1,4 @@
-use proconio::input_from_source;
+use proconio::input;
 use proconio::source::Source;
 use proconio_derive::ReadSource;
 
@@ -18,7 +18,7 @@ struct Edge {
 
 fn main() {
     let source = Source::from_str("  12 32 35");
-    input_from_source! {
+    input! {
         from source,
         edge: Edge,
     }
