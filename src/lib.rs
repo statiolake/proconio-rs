@@ -79,7 +79,7 @@ mod tests {
 
     #[test]
     fn input_number() {
-        let source = Source::from_str("    32   54 -23\r\r\n\nfalse");
+        let source = Source::from("    32   54 -23\r\r\n\nfalse");
 
         input! {
             from source,
@@ -95,7 +95,7 @@ mod tests {
 
     #[test]
     fn input_str() {
-        let source = Source::from_str("  string   chars\nbytes");
+        let source = Source::from("  string   chars\nbytes");
 
         input! {
             from source,
@@ -111,7 +111,7 @@ mod tests {
 
     #[test]
     fn input_array() {
-        let source = Source::from_str("5 4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
+        let source = Source::from("5 4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
 
         input! {
             from source,
@@ -133,7 +133,7 @@ mod tests {
 
     #[test]
     fn input_tuple() {
-        let source = Source::from_str("4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
+        let source = Source::from("4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
 
         input! {
             from source,
@@ -154,7 +154,7 @@ mod tests {
 
     #[test]
     fn input_multiple_times() {
-        let mut source = Source::from_str("4 1 2 3 4\n1 2\r\n\r\r\n3 4");
+        let mut source = Source::from("4 1 2 3 4\n1 2\r\n\r\r\n3 4");
 
         input! {
             from &mut source,

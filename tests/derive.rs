@@ -17,7 +17,7 @@ struct Edge {
 }
 
 fn main() {
-    let source = Source::from_str("  12 32 35");
+    let source = Source::from("  12 32 35");
     input! {
         from source,
         edge: Edge,

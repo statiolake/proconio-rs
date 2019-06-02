@@ -55,8 +55,8 @@ impl<R: BufRead> Source<R> {
 }
 
 use std::io::BufReader;
-impl Source<BufReader<&[u8]>> {
-    pub fn from_str(s: &str) -> Source<BufReader<&[u8]>> {
+impl<'a> From<&'a str> for Source<BufReader<&'a [u8]>> {
+    fn from(s: &'a str) -> Source<BufReader<&'a [u8]>> {
         Source::new(BufReader::new(s.as_bytes()))
     }
 }
