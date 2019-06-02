@@ -47,12 +47,12 @@ macro_rules! read_value {
 
     // Chars: Vec<char>
     (Chars; $source:expr) => {
-        $crate::read_value!(@ty $crate::read::Chars; $source);
+        $crate::read_value!(@ty $crate::types::Chars; $source);
     };
 
     // Bytes: Vec<u8>
     (Bytes; $source:expr) => {
-        $crate::read_value!(@ty $crate::read::Bytes; $source);
+        $crate::read_value!(@ty $crate::types::Bytes; $source);
     };
 
     // normal other
