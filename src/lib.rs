@@ -22,6 +22,7 @@ macro_rules! input_from_source {
         $(
             let $var = $crate::read_value!($kind; &mut s);
         )*
+        drop(s);
     };
 }
 
