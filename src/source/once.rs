@@ -5,8 +5,6 @@ use std::str::SplitWhitespace;
 /// User input source.  If you use `input!` it obtains stdin, or if you use
 /// `input_from_source!` it obtains the specified source.
 pub struct Source<R: BufRead> {
-    context: Box<str>,
-
     // Of course this is not 'static actually, but it is always valid reference
     // while entire `Source` is alive.  The actual lifetime is the context's
     // inner lifetime, and it is essentially the lifetime of self.  Also note
@@ -15,6 +13,8 @@ pub struct Source<R: BufRead> {
     //
     // FIXME: find nicer way.
     tokens: SplitWhitespace<'static>,
+
+    context: Box<str>,
 
     _read: PhantomData<R>,
 }
