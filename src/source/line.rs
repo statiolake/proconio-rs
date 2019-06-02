@@ -34,7 +34,7 @@ impl<R: BufRead> Source<R> {
                 .read_line(&mut line)
                 .expect("failed to get line");
             self.current_context = line.into_boxed_str();
-            self.tokens = unsafe { &*(&*self.current_context as *const str) }
+            self.tokens = unsafe { std::mem::transmute::<_, &'static str>(&*self.current_context) }
                 .split_whitespace()
                 .peekable();
         }

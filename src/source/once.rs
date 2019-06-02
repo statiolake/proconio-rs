@@ -30,15 +30,18 @@ impl<R: BufRead> Source<R> {
         // Boxed str is no need to check to pin.
         let context = context.into_boxed_str();
 
+        // We can create tokens first.  But doing so causes "unused variable `context`" warning
+        // (here `context` is Source::context, a member of Source`). To avoid the warning at first
+        // tokens are dummy and replace it using Source's context.
         let mut res = Source {
             context,
             tokens: "".split_whitespace(),
             _read: PhantomData,
         };
 
-        let self_reference: &'static str = unsafe { &*(&*res.context as *const str) };
-
-        std::mem::replace(&mut res.tokens, self_reference.split_whitespace());
+        use std::mem;
+        let context: &'static str = unsafe { mem::transmute(&*res.context) };
+        mem::replace(&mut res.tokens, context.split_whitespace());
 
         res
     }
