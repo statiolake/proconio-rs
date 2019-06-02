@@ -171,4 +171,26 @@ mod tests {
             assert_eq!(k, if i % 2 == 0 { 2 } else { 4 });
         }
     }
+
+    #[test]
+    fn input_iusize1() {
+        use crate::types::Usize1;
+
+        let mut source = Source::from("4 1 2 3 4 5 6 7 8");
+
+        input! {
+            from &mut source,
+            n: usize,
+        }
+
+        for i in 0..n {
+            input! {
+                from &mut source,
+                from: Usize1, to: Usize1
+            }
+
+            assert_eq!(from, i * 2);
+            assert_eq!(to, i * 2 + 1);
+        }
+    }
 }
