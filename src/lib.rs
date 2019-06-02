@@ -147,7 +147,7 @@ mod tests {
 
     #[test]
     fn input_multiple_times() {
-        let mut source = Source::from_str("4 1 2 3 4 1 2 3 4");
+        let mut source = Source::from_str("4 1 2 3 4\n1 2\r\n\r\r\n3 4");
 
         input_from_source! {
             from &mut source,
