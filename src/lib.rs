@@ -52,16 +52,6 @@ macro_rules! read_value {
         )
     };
 
-    // Chars: Vec<char>
-    (Chars; $source:expr) => {
-        $crate::read_value!(@ty $crate::types::Chars; $source);
-    };
-
-    // Bytes: Vec<u8>
-    (Bytes; $source:expr) => {
-        $crate::read_value!(@ty $crate::types::Bytes; $source);
-    };
-
     // normal other
     ($ty:tt; $source:expr) => {
         $crate::read_value!(@ty $ty; $source);
@@ -265,6 +255,7 @@ mod tests {
 
     #[test]
     fn input_str() {
+        use crate::types::{Chars, Bytes};
         let source = AutoSource::from("  string   chars\nbytes");
 
         input! {
