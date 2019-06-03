@@ -22,7 +22,8 @@ define_struct! {
     }
 }
 
-fn main() {
+#[test]
+fn derive() {
     let source = Source::from("  12 32 35");
     input! {
         from source,

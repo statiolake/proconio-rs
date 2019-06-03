@@ -2,7 +2,7 @@ use proconio::input;
 
 #[test]
 #[ignore]
-fn main() {
+fn stdin() {
     input! {
         n: usize,
     }
