@@ -1,12 +1,30 @@
+use std::io::BufRead;
+
 pub mod line;
 pub mod once;
 
-#[cfg(debug_assertions)]
-pub use self::line::Source;
-#[cfg(not(debug_assertions))]
-pub use self::once::Source;
+pub mod auto {
+    #[cfg(debug_assertions)]
+    pub use super::line::LineSource as AutoSource;
+    #[cfg(not(debug_assertions))]
+    pub use super::once::OnceSource as AutoSource;
+}
 
-use std::io::BufRead;
+pub trait Source<R: BufRead> {
+    /// Gets a next token.
+    fn next_token(&mut self) -> Option<&str>;
+
+    /// Force gets a next token.
+    fn next_token_unwrap(&mut self) -> &str {
+        self.next_token().expect("failed to get token")
+    }
+}
+
+impl<R: BufRead, S: Source<R>> Source<R> for &'_ mut S {
+    fn next_token(&mut self) -> Option<&str> {
+        (*self).next_token()
+    }
+}
 
 /// A trait representing which type can be read from `Source`.
 ///
@@ -16,5 +34,5 @@ use std::io::BufRead;
 /// implements `ReadSource` if all members of your type are `ReadSource`.
 pub trait ReadSource {
     type Output;
-    fn read<R: BufRead>(source: &mut Source<R>) -> Self::Output;
+    fn read<R: BufRead, S: Source<R>>(source: &mut S) -> Self::Output;
 }

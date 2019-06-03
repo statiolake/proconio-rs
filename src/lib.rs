@@ -2,15 +2,15 @@ pub mod read;
 pub mod source;
 pub mod types;
 
-use crate::source::Source;
+use crate::source::auto::AutoSource;
 use lazy_static::lazy_static;
 use std::io;
 use std::io::{BufReader, Stdin};
 use std::sync::Mutex;
 
 lazy_static! {
-    pub static ref STDIN_SOURCE: Mutex<Source<BufReader<Stdin>>> =
-        Mutex::new(Source::new(BufReader::new(io::stdin())));
+    pub static ref STDIN_SOURCE: Mutex<AutoSource<BufReader<Stdin>>> =
+        Mutex::new(AutoSource::new(BufReader::new(io::stdin())));
 }
 
 /// read input from stdin.
@@ -136,7 +136,7 @@ macro_rules! derive_read_source {
 
         impl $crate::source::ReadSource for $name {
             type Output = $name;
-            fn read<R: std::io::BufRead>(source: &mut $crate::source::Source<R>) -> $name {
+            fn read<R: std::io::BufRead, S: $crate::source::Source<R>>(source: &mut S) -> $name {
                 $name {
                     $(
                         $field: <$ty as $crate::source::ReadSource>::read(source),
@@ -188,7 +188,7 @@ macro_rules! derive_read_source {
 
         impl $crate::source::ReadSource for $name {
             type Output = $name;
-            fn read<R: std::io::BufRead>(source: &mut $crate::source::Source<R>) -> $name {
+            fn read<R: std::io::BufRead, S: $crate::source::Source<R>>(source: &mut S) -> $name {
                 $name (
                     $(
                         <$ty as $crate::source::ReadSource>::read(source),
@@ -236,7 +236,7 @@ macro_rules! derive_read_source {
 
         impl $crate::source::ReadSource for $name {
             type Output = $name;
-            fn read<R: std::io::BufRead>(source: &mut $crate::source::Source<R>) -> $name {
+            fn read<R: std::io::BufRead, S: $crate::source::Source<R>>(source: &mut S) -> $name {
                 $name
             }
         }
@@ -245,11 +245,11 @@ macro_rules! derive_read_source {
 
 #[cfg(test)]
 mod tests {
-    use crate::source::Source;
+    use crate::source::auto::AutoSource;
 
     #[test]
     fn input_number() {
-        let source = Source::from("    32   54 -23\r\r\n\nfalse");
+        let source = AutoSource::from("    32   54 -23\r\r\n\nfalse");
 
         input! {
             from source,
@@ -265,7 +265,7 @@ mod tests {
 
     #[test]
     fn input_str() {
-        let source = Source::from("  string   chars\nbytes");
+        let source = AutoSource::from("  string   chars\nbytes");
 
         input! {
             from source,
@@ -281,7 +281,7 @@ mod tests {
 
     #[test]
     fn input_array() {
-        let source = Source::from("5 4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
+        let source = AutoSource::from("5 4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
 
         input! {
             from source,
@@ -303,7 +303,7 @@ mod tests {
 
     #[test]
     fn input_tuple() {
-        let source = Source::from("4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
+        let source = AutoSource::from("4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
 
         input! {
             from source,
@@ -324,7 +324,7 @@ mod tests {
 
     #[test]
     fn input_multiple_times() {
-        let mut source = Source::from("4 1 2 3 4\n1 2\r\n\r\r\n3 4");
+        let mut source = AutoSource::from("4 1 2 3 4\n1 2\r\n\r\r\n3 4");
 
         input! {
             from &mut source,
@@ -346,7 +346,7 @@ mod tests {
     fn input_iusize1() {
         use crate::types::Usize1;
 
-        let mut source = Source::from("4 1 2 3 4 5 6 7 8");
+        let mut source = AutoSource::from("4 1 2 3 4 5 6 7 8");
 
         input! {
             from &mut source,

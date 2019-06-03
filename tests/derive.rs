@@ -1,4 +1,4 @@
-use proconio::source::Source;
+use proconio::source::auto::AutoSource;
 use proconio::types::Usize1;
 use proconio::{derive_read_source, input};
 
@@ -24,7 +24,7 @@ derive_read_source! {
 
 #[test]
 fn derive() {
-    let source = Source::from("  12 32 35");
+    let source = AutoSource::from("  12 32 35");
     input! {
         from source,
         edge: Edge,

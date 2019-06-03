@@ -7,7 +7,7 @@ macro_rules! impl_read_source_for_primitives {
         $(
             impl ReadSource for $ty  {
                 type Output = $ty;
-                fn read<R: BufRead>(source: &mut Source<R>) -> $ty {
+                fn read<R: BufRead, S: Source<R>>(source: &mut S) -> $ty {
                     source
                         .next_token_unwrap()
                         .parse()
@@ -26,35 +26,35 @@ impl_read_source_for_primitives! {
 
 impl ReadSource for String {
     type Output = String;
-    fn read<R: BufRead>(source: &mut Source<R>) -> String {
+    fn read<R: BufRead, S: Source<R>>(source: &mut S) -> String {
         source.next_token_unwrap().into()
     }
 }
 
 impl ReadSource for Chars {
     type Output = Chars;
-    fn read<R: BufRead>(source: &mut Source<R>) -> Chars {
+    fn read<R: BufRead, S: Source<R>>(source: &mut S) -> Chars {
         source.next_token_unwrap().chars().collect()
     }
 }
 
 impl ReadSource for Bytes {
     type Output = Bytes;
-    fn read<R: BufRead>(source: &mut Source<R>) -> Bytes {
+    fn read<R: BufRead, S: Source<R>>(source: &mut S) -> Bytes {
         source.next_token_unwrap().bytes().collect()
     }
 }
 
 impl ReadSource for Usize1 {
     type Output = usize;
-    fn read<R: BufRead>(source: &mut Source<R>) -> usize {
+    fn read<R: BufRead, S: Source<R>>(source: &mut S) -> usize {
         usize::read(source) - 1
     }
 }
 
 impl ReadSource for Isize1 {
     type Output = isize;
-    fn read<R: BufRead>(source: &mut Source<R>) -> isize {
+    fn read<R: BufRead, S: Source<R>>(source: &mut S) -> isize {
         isize::read(source) - 1
     }
 }

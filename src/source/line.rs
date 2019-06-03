@@ -1,8 +1,9 @@
+use super::Source;
 use std::io::BufRead;
 use std::iter::Peekable;
 use std::str::SplitWhitespace;
 
-pub struct Source<R: BufRead> {
+pub struct LineSource<R: BufRead> {
     // FIXME: This is actually not 'static but it is treated as 'static for the same reason with
     // crate::source::once::Source.  Also there is no way to separate context and tokens since they
     // are private field, this is safe.
@@ -13,21 +14,19 @@ pub struct Source<R: BufRead> {
     reader: R,
 }
 
-impl<R: BufRead> Source<R> {
-    pub fn new(reader: R) -> Source<R> {
+impl<R: BufRead> LineSource<R> {
+    pub fn new(reader: R) -> LineSource<R> {
         // dummy values.
-        Source {
+        LineSource {
             current_context: "".to_string().into_boxed_str(),
             tokens: "".split_whitespace().peekable(),
             reader,
         }
     }
+}
 
-    pub fn next_token_unwrap(&mut self) -> &str {
-        self.next_token().expect("failed to get token")
-    }
-
-    pub fn next_token(&mut self) -> Option<&str> {
+impl<R: BufRead> Source<R> for LineSource<R> {
+    fn next_token(&mut self) -> Option<&str> {
         while self.tokens.peek().is_none() {
             let mut line = String::new();
             self.reader
@@ -44,8 +43,8 @@ impl<R: BufRead> Source<R> {
 }
 
 use std::io::BufReader;
-impl<'a> From<&'a str> for Source<BufReader<&'a [u8]>> {
-    fn from(s: &'a str) -> Source<BufReader<&'a [u8]>> {
-        Source::new(BufReader::new(s.as_bytes()))
+impl<'a> From<&'a str> for LineSource<BufReader<&'a [u8]>> {
+    fn from(s: &'a str) -> LineSource<BufReader<&'a [u8]>> {
+        LineSource::new(BufReader::new(s.as_bytes()))
     }
 }

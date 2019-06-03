@@ -1,10 +1,11 @@
+use super::Source;
 use std::io::BufRead;
 use std::marker::PhantomData;
 use std::str::SplitWhitespace;
 
 /// User input source.  If you use `input!` it obtains stdin, or if you use
 /// `input_from_source!` it obtains the specified source.
-pub struct Source<R: BufRead> {
+pub struct OnceSource<R: BufRead> {
     // Of course this is not 'static actually, but it is always valid reference
     // while entire `Source` is alive.  The actual lifetime is the context's
     // inner lifetime, and it is essentially the lifetime of self.  Also note
@@ -19,9 +20,9 @@ pub struct Source<R: BufRead> {
     _read: PhantomData<R>,
 }
 
-impl<R: BufRead> Source<R> {
+impl<R: BufRead> OnceSource<R> {
     /// Creates `Source` using specified reader of `BufRead`.
-    pub fn new(mut source: R) -> Source<R> {
+    pub fn new(mut source: R) -> OnceSource<R> {
         let mut context = String::new();
         source
             .read_to_string(&mut context)
@@ -33,7 +34,7 @@ impl<R: BufRead> Source<R> {
         // We can create tokens first.  But doing so causes "unused variable `context`" warning
         // (here `context` is Source::context, a member of Source`). To avoid the warning at first
         // tokens are dummy and replace it using Source's context.
-        let mut res = Source {
+        let mut res = OnceSource {
             context,
             tokens: "".split_whitespace(),
             _read: PhantomData,
@@ -45,21 +46,18 @@ impl<R: BufRead> Source<R> {
 
         res
     }
+}
 
-    /// Force gets a next token.
-    pub fn next_token_unwrap(&mut self) -> &str {
-        self.next_token().expect("failed to get token")
-    }
-
+impl<R: BufRead> Source<R> for OnceSource<R> {
     /// Gets a next token.
-    pub fn next_token(&mut self) -> Option<&str> {
+    fn next_token(&mut self) -> Option<&str> {
         self.tokens.next()
     }
 }
 
 use std::io::BufReader;
-impl<'a> From<&'a str> for Source<BufReader<&'a [u8]>> {
-    fn from(s: &'a str) -> Source<BufReader<&'a [u8]>> {
-        Source::new(BufReader::new(s.as_bytes()))
+impl<'a> From<&'a str> for OnceSource<BufReader<&'a [u8]>> {
+    fn from(s: &'a str) -> OnceSource<BufReader<&'a [u8]>> {
+        OnceSource::new(BufReader::new(s.as_bytes()))
     }
 }
