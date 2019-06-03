@@ -6,7 +6,7 @@ use proc_macro2::Span;
 use quote::quote;
 use syn::{Data, DeriveInput, Fields};
 
-#[proc_macro_derive(ReadSource)]
+#[proc_macro_derive(Readable)]
 pub fn read_derive(input: TokenStream) -> TokenStream {
     let ast: DeriveInput = syn::parse(input).expect("failed to parse input.");
 
@@ -19,7 +19,7 @@ pub fn read_derive(input: TokenStream) -> TokenStream {
     let reads = field_info.iter().map(|f| &f.read);
 
     let res = quote! {
-        impl proconio::source::ReadSource for #name {
+        impl proconio::source::Readable for #name {
             type Output = #name;
             fn read<R: std::io::BufRead>(source: &mut proconio::source::Source<R>) -> #name {
                 #(#reads)*
@@ -39,7 +39,7 @@ fn get_data(ast: syn::DeriveInput) -> syn::DataStruct {
 
     match data {
         Data::Struct(data) => data,
-        _ => panic!("ReadSource can only derivable for structs."),
+        _ => panic!("Readable can only derivable for structs."),
     }
 }
 
@@ -65,7 +65,7 @@ fn field_named(fields: &syn::Fields) -> Vec<FieldInfo> {
         let ident = ident.expect("internal error: named field doesn't have name");
         let ty = field.ty.clone();
         let read = quote! {
-            let #ident = <#ty as proconio::source::ReadSource>::read(source);
+            let #ident = <#ty as proconio::source::Readable>::read(source);
         };
 
         res.push(FieldInfo { ident, ty, read });
@@ -82,7 +82,7 @@ fn field_unnamed(fields: &syn::Fields) -> Vec<FieldInfo> {
         let ident = syn::Ident::new(&ident, Span::call_site());
         let ty = field.ty.clone();
         let read = quote! {
-            let #ident = <#ty as proconio::source::ReadSource>::read(source);
+            let #ident = <#ty as proconio::source::Readable>::read(source);
         };
 
         res.push(FieldInfo { ident, ty, read });

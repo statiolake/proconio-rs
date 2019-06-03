@@ -1,11 +1,11 @@
-use crate::source::{ReadSource, Source};
+use crate::source::{Readable, Source};
 use crate::types::{Bytes, Chars, Isize1, Usize1};
 use std::io::BufRead;
 
 macro_rules! impl_read_source_for_primitives {
     ($($ty:ty)*) => {
         $(
-            impl ReadSource for $ty  {
+            impl Readable for $ty  {
                 type Output = $ty;
                 fn read<R: BufRead, S: Source<R>>(source: &mut S) -> $ty {
                     source
@@ -24,35 +24,35 @@ impl_read_source_for_primitives! {
     char bool f32 f64
 }
 
-impl ReadSource for String {
+impl Readable for String {
     type Output = String;
     fn read<R: BufRead, S: Source<R>>(source: &mut S) -> String {
         source.next_token_unwrap().into()
     }
 }
 
-impl ReadSource for Chars {
+impl Readable for Chars {
     type Output = Chars;
     fn read<R: BufRead, S: Source<R>>(source: &mut S) -> Chars {
         source.next_token_unwrap().chars().collect()
     }
 }
 
-impl ReadSource for Bytes {
+impl Readable for Bytes {
     type Output = Bytes;
     fn read<R: BufRead, S: Source<R>>(source: &mut S) -> Bytes {
         source.next_token_unwrap().bytes().collect()
     }
 }
 
-impl ReadSource for Usize1 {
+impl Readable for Usize1 {
     type Output = usize;
     fn read<R: BufRead, S: Source<R>>(source: &mut S) -> usize {
         usize::read(source) - 1
     }
 }
 
-impl ReadSource for Isize1 {
+impl Readable for Isize1 {
     type Output = isize;
     fn read<R: BufRead, S: Source<R>>(source: &mut S) -> isize {
         isize::read(source) - 1

@@ -69,7 +69,7 @@ macro_rules! read_value {
 
     // actual reading
     (@ty $ty:ty; $source:expr) => {
-        <$ty as $crate::source::ReadSource>::read($source)
+        <$ty as $crate::source::Readable>::read($source)
     }
 }
 
@@ -130,16 +130,16 @@ macro_rules! derive_read_source {
         $($attr)*
         $($svis)* struct $name {
             $(
-                $($fvis)* $field: <$ty as $crate::source::ReadSource>::Output,
+                $($fvis)* $field: <$ty as $crate::source::Readable>::Output,
             )*
         }
 
-        impl $crate::source::ReadSource for $name {
+        impl $crate::source::Readable for $name {
             type Output = $name;
             fn read<R: std::io::BufRead, S: $crate::source::Source<R>>(source: &mut S) -> $name {
                 $name {
                     $(
-                        $field: <$ty as $crate::source::ReadSource>::read(source),
+                        $field: <$ty as $crate::source::Readable>::read(source),
                     )*
                 }
             }
@@ -182,16 +182,16 @@ macro_rules! derive_read_source {
         $($attr)*
         $($svis)* struct $name (
             $(
-                $($fvis)* <$ty as $crate::source::ReadSource>::Output,
+                $($fvis)* <$ty as $crate::source::Readable>::Output,
             )*
         );
 
-        impl $crate::source::ReadSource for $name {
+        impl $crate::source::Readable for $name {
             type Output = $name;
             fn read<R: std::io::BufRead, S: $crate::source::Source<R>>(source: &mut S) -> $name {
                 $name (
                     $(
-                        <$ty as $crate::source::ReadSource>::read(source),
+                        <$ty as $crate::source::Readable>::read(source),
                     )*
                 )
             }
@@ -234,7 +234,7 @@ macro_rules! derive_read_source {
         $($attr)*
         $($svis)* struct $name;
 
-        impl $crate::source::ReadSource for $name {
+        impl $crate::source::Readable for $name {
             type Output = $name;
             fn read<R: std::io::BufRead, S: $crate::source::Source<R>>(source: &mut S) -> $name {
                 $name
