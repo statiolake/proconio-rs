@@ -1,19 +1,25 @@
-use proconio::input;
 use proconio::source::Source;
-use proconio_derive::ReadSource;
+use proconio::types::Usize1;
+use proconio::{define_struct, input};
 
-#[derive(ReadSource, PartialEq, Debug)]
-struct Weight;
+define_struct! {
+    #[derive(PartialEq, Debug)]
+    struct Weight;
+}
 
-#[derive(ReadSource, PartialEq, Debug)]
-struct Cost(i32);
+define_struct! {
+    #[derive(PartialEq, Debug)]
+    struct Cost(pub(crate) i32);
+}
 
-#[derive(ReadSource)]
-struct Edge {
-    from: usize,
-    to: usize,
-    weight: Weight,
-    cost: Cost,
+define_struct! {
+    #[derive(Debug)]
+    struct Edge {
+        from: usize,
+        pub to: Usize1,
+        pub(in self) weight: Weight,
+        pub(crate) cost: Cost,
+    }
 }
 
 fn main() {
@@ -24,7 +30,7 @@ fn main() {
     }
 
     assert_eq!(edge.from, 12);
-    assert_eq!(edge.to, 32);
+    assert_eq!(edge.to, 31);
     assert_eq!(edge.weight, Weight);
     assert_eq!(edge.cost, Cost(35));
 }

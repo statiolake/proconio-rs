@@ -73,6 +73,176 @@ macro_rules! read_value {
     }
 }
 
+#[macro_export]
+macro_rules! define_struct {
+    ($(#[$($attr:meta)*])* struct $name:ident $($tt:tt)*) => {
+        define_struct! {
+            @general
+            @attr ($(#[$($attr)*])*)
+            @vis ()
+            @name $name
+            @rest $($tt)*
+        }
+    };
+
+    ($(#[$($attr:meta)*])* $svis:vis struct $name:ident $($tt:tt)*) => {
+        define_struct! {
+            @general
+            @attr ($(#[$($attr)*])*)
+            @vis ($svis)
+            @name $name
+            @rest $($tt)*
+        }
+    };
+
+    (@general @attr ($($attr:tt)*) @vis ($($svis:tt)*) @name $name:ident @rest { $($tt:tt)* }) => {
+        define_struct! {
+            @normal
+            @attr ($($attr)*)
+            @vis ($($svis)*)
+            @name $name
+            @fields {}
+            @rest $($tt)*,
+        }
+    };
+
+    (@general @attr ($($attr:tt)*) @vis ($($svis:tt)*) @name $name:ident @rest ( $($tt:tt)* );) => {
+        define_struct! {
+            @tuple
+            @attr ($($attr)*)
+            @vis ($($svis)*)
+            @name $name
+            @fields ()
+            @rest $($tt)*,
+        }
+    };
+
+    (@general @attr ($($attr:tt)*) @vis ($($svis:tt)*) @name $name:ident @rest ;) => {
+        define_struct! {
+            @unit
+            @attr ($($attr)*)
+            @vis ($($svis)*)
+            @name $name
+        }
+    };
+
+    (@normal @attr ($($attr:tt)*) @vis ($($svis:tt)*) @name $name:ident @fields {$(($($fvis:tt)*) $field:ident: $ty:ty,)*} @rest $(,)? ) => {
+        $($attr)*
+        $($svis)* struct $name {
+            $(
+                $($fvis)* $field: <$ty as $crate::source::ReadSource>::Output,
+            )*
+        }
+
+        impl $crate::source::ReadSource for $name {
+            type Output = $name;
+            fn read<R: std::io::BufRead>(source: &mut $crate::source::Source<R>) -> $name {
+                $name {
+                    $(
+                        $field: <$ty as $crate::source::ReadSource>::read(source),
+                    )*
+                }
+            }
+        }
+    };
+
+    (@normal @attr ($($attr:tt)*) @vis ($($svis:tt)*) @name $name:ident @fields {$(($($fvis:tt)*) $field:ident: $ty:ty,)*} @rest $cfvis:vis $cfield:ident: $cty:ty, $($tt:tt)*) => {
+        define_struct! {
+            @normal
+            @attr ($($attr)*)
+            @vis ($($svis)*)
+            @name $name
+            @fields {
+                $(
+                    ($($fvis)*) $field: $ty,
+                )*
+                ($cfvis) $cfield: $cty,
+            }
+            @rest $($tt)*
+        }
+    };
+
+    (@normal @attr ($($attr:tt)*) @vis ($($svis:tt)*) @name $name:ident @fields {$(($($fvis:tt)*) $field:ident: $ty:ty,)*} @rest $cfield:ident: $cty:ty, $($tt:tt)*) => {
+        define_struct! {
+            @normal
+            @attr ($($attr)*)
+            @vis ($($svis)*)
+            @name $name
+            @fields {
+                $(
+                    ($($fvis)*) $field: $ty,
+                )*
+                () $cfield: $cty,
+            }
+            @rest $($tt)*
+        }
+    };
+
+    (@tuple @attr ($($attr:tt)*) @vis ($($svis:tt)*) @name $name:ident @fields ($(($($fvis:tt)*) $ty:ty,)*) @rest $(,)? ) => {
+        $($attr)*
+        $($svis)* struct $name (
+            $(
+                $($fvis)* <$ty as $crate::source::ReadSource>::Output,
+            )*
+        );
+
+        impl $crate::source::ReadSource for $name {
+            type Output = $name;
+            fn read<R: std::io::BufRead>(source: &mut $crate::source::Source<R>) -> $name {
+                $name (
+                    $(
+                        <$ty as $crate::source::ReadSource>::read(source),
+                    )*
+                )
+            }
+        }
+    };
+
+    (@tuple @attr ($($attr:tt)*) @vis ($($svis:tt)*) @name $name:ident @fields ($(($($fvis:tt)*) $ty:ty,)*) @rest $cfvis:vis $cty:ty, $($tt:tt)*) => {
+        define_struct! {
+            @tuple
+            @attr ($($attr)*)
+            @vis ($($svis)*)
+            @name $name
+            @fields (
+                $(
+                    ($($fvis)*) $ty,
+                )*
+                ($cfvis) $cty,
+            )
+            @rest $($tt)*
+        }
+    };
+
+    (@tuple @attr ($($attr:tt)*) @vis ($($svis:tt)*) @name $name:ident @fields ($(($($fvis:tt)*) $ty:ty,)*) @rest $cty:ty, $($tt:tt)*) => {
+        define_struct! {
+            @tuple
+            @attr ($($attr)*)
+            @vis ($($svis)*)
+            @name $name
+            @fields (
+                $(
+                    ($($fvis)*) $ty,
+                )*
+                () $cty,
+            )
+            @rest $($tt)*
+        }
+    };
+
+    (@unit @attr ($($attr:tt)*) @vis ($($svis:tt)*) @name $name:ident) => {
+        $($attr)*
+        $($svis)* struct $name;
+
+        impl $crate::source::ReadSource for $name {
+            type Output = $name;
+            fn read<R: std::io::BufRead>(source: &mut $crate::source::Source<R>) -> $name {
+                $name
+            }
+        }
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use crate::source::Source;
