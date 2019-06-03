@@ -1,18 +1,18 @@
 use proconio::source::Source;
 use proconio::types::Usize1;
-use proconio::{define_struct, input};
+use proconio::{derive_read_source, input};
 
-define_struct! {
+derive_read_source! {
     #[derive(PartialEq, Debug)]
     struct Weight;
 }
 
-define_struct! {
+derive_read_source! {
     #[derive(PartialEq, Debug)]
     struct Cost(pub(crate) i32);
 }
 
-define_struct! {
+derive_read_source! {
     #[derive(Debug)]
     struct Edge {
         from: usize,
