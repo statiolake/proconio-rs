@@ -4,9 +4,9 @@ use std::iter::Peekable;
 use std::str::SplitWhitespace;
 
 pub struct LineSource<R: BufRead> {
-    // FIXME: This is actually not 'static but it is treated as 'static for the same reason with
-    // crate::source::once::Source.  Also there is no way to separate context and tokens since they
-    // are private field, this is safe.
+    // FIXME: This is actually not 'static but it is treated as 'static for the
+    // same reason with crate::source::once::Source.  Also there is no way to
+    // separate context and tokens since they are private field, this is safe.
     tokens: Peekable<SplitWhitespace<'static>>,
 
     current_context: Box<str>,

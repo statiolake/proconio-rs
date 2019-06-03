@@ -31,9 +31,10 @@ impl<R: BufRead> OnceSource<R> {
         // Boxed str is no need to check to pin.
         let context = context.into_boxed_str();
 
-        // We can create tokens first.  But doing so causes "unused variable `context`" warning
-        // (here `context` is Source::context, a member of Source`). To avoid the warning at first
-        // tokens are dummy and replace it using Source's context.
+        // We can create tokens first.  But doing so causes "unused variable
+        // `context`" warning (here `context` is Source::context, a member of
+        // Source`). To avoid the warning at first tokens are dummy and replace
+        // it using Source's context.
         let mut res = OnceSource {
             context,
             tokens: "".split_whitespace(),
