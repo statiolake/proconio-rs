@@ -6,36 +6,68 @@ use proc_macro2::Span;
 use quote::quote;
 use syn::{Data, DeriveInput, Fields};
 
-#[proc_macro_derive(Readable)]
-pub fn read_derive(input: TokenStream) -> TokenStream {
-    let ast: DeriveInput = syn::parse(input).expect("failed to parse input.");
+#[proc_macro_attribute]
+pub fn derive_readable(attr: TokenStream, input: TokenStream) -> TokenStream {
+    if !attr.is_empty() {
+        panic!("no extra attribute is supported.");
+    }
 
-    let name = get_name(&ast);
-    let fields = get_data(ast).fields;
+    let mut ast: DeriveInput = syn::parse(input).expect("failed to parse the struct definition.");
+
+    // derive actually Readable
+    let derive = derive_readable_impl(&ast);
+
+    // modify AST to use actual Readable::Output type
+    replace_type(&mut ast);
+
+    quote!(#ast #derive).into()
+}
+
+fn replace_type(ast: &mut DeriveInput) {
+    use quote::ToTokens;
+
+    let data = match &mut ast.data {
+        Data::Struct(data) => data,
+        _ => panic!("Readable is only derivable for structs."),
+    };
+
+    for field in data.fields.iter_mut() {
+        let new_ty: syn::Type = {
+            let ty = field.ty.clone().into_token_stream();
+            syn::parse_quote!(<#ty as proconio::source::Readable>::Output)
+        };
+
+        std::mem::replace(&mut field.ty, new_ty);
+    }
+}
+
+fn derive_readable_impl(ast: &DeriveInput) -> proc_macro2::TokenStream {
+    let name = get_name(ast);
+    let fields = &get_data(ast).fields;
 
     let field_info = field_info(&fields);
-    let decl = declare(&fields, &name, &field_info);
     let generate = generate(&fields, &name, &field_info);
     let reads = field_info.iter().map(|f| &f.read);
 
     let res = quote! {
         impl proconio::source::Readable for #name {
             type Output = #name;
-            fn read<R: std::io::BufRead>(source: &mut proconio::source::Source<R>) -> #name {
+            fn read<R: std::io::BufRead, S: proconio::source::Source<R>>(source: &mut S) -> #name {
                 #(#reads)*
                 #generate
             }
         }
     };
-    res.into()
+
+    res
 }
 
 fn get_name(ast: &syn::DeriveInput) -> syn::Ident {
     ast.ident.clone()
 }
 
-fn get_data(ast: syn::DeriveInput) -> syn::DataStruct {
-    let data = ast.data;
+fn get_data(ast: &syn::DeriveInput) -> &syn::DataStruct {
+    let data = &ast.data;
 
     match data {
         Data::Struct(data) => data,
@@ -45,7 +77,6 @@ fn get_data(ast: syn::DeriveInput) -> syn::DataStruct {
 
 struct FieldInfo {
     ident: syn::Ident,
-    ty: syn::Type,
     read: proc_macro2::TokenStream,
 }
 
@@ -68,7 +99,7 @@ fn field_named(fields: &syn::Fields) -> Vec<FieldInfo> {
             let #ident = <#ty as proconio::source::Readable>::read(source);
         };
 
-        res.push(FieldInfo { ident, ty, read });
+        res.push(FieldInfo { ident, read });
     }
 
     res
@@ -85,44 +116,10 @@ fn field_unnamed(fields: &syn::Fields) -> Vec<FieldInfo> {
             let #ident = <#ty as proconio::source::Readable>::read(source);
         };
 
-        res.push(FieldInfo { ident, ty, read });
+        res.push(FieldInfo { ident, read });
     }
 
     res
-}
-
-fn declare(
-    fields: &syn::Fields,
-    name: &syn::Ident,
-    field_info: &[FieldInfo],
-) -> proc_macro2::TokenStream {
-    let idents = field_info.iter().map(|f| &f.ident);
-    let types = field_info.iter().map(|f| &f.ty);
-
-    match fields {
-        Fields::Named(_) => {
-            quote! {
-                #[derive(Debug)]
-                struct #name {
-                    #(#idents: #types,)*
-                }
-            }
-        }
-
-        Fields::Unnamed(_) => {
-            quote! {
-                #[derive(Debug)]
-                struct #name(#(#idents,)*);
-            }
-        }
-
-        Fields::Unit => {
-            quote! {
-                #[derive(Debug)]
-                struct #name;
-            }
-        }
-    }
 }
 
 fn generate(

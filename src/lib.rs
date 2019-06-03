@@ -74,9 +74,9 @@ macro_rules! read_value {
 }
 
 #[macro_export]
-macro_rules! derive_read_source {
+macro_rules! derive_readable {
     ($(#[$($attr:meta)*])* struct $name:ident $($tt:tt)*) => {
-        derive_read_source! {
+        derive_readable! {
             @general
             @attr ($(#[$($attr)*])*)
             @vis ()
@@ -86,7 +86,7 @@ macro_rules! derive_read_source {
     };
 
     ($(#[$($attr:meta)*])* $svis:vis struct $name:ident $($tt:tt)*) => {
-        derive_read_source! {
+        derive_readable! {
             @general
             @attr ($(#[$($attr)*])*)
             @vis ($svis)
@@ -96,7 +96,7 @@ macro_rules! derive_read_source {
     };
 
     (@general @attr ($($attr:tt)*) @vis ($($svis:tt)*) @name $name:ident @rest { $($tt:tt)* }) => {
-        derive_read_source! {
+        derive_readable! {
             @normal
             @attr ($($attr)*)
             @vis ($($svis)*)
@@ -107,7 +107,7 @@ macro_rules! derive_read_source {
     };
 
     (@general @attr ($($attr:tt)*) @vis ($($svis:tt)*) @name $name:ident @rest ( $($tt:tt)* );) => {
-        derive_read_source! {
+        derive_readable! {
             @tuple
             @attr ($($attr)*)
             @vis ($($svis)*)
@@ -118,7 +118,7 @@ macro_rules! derive_read_source {
     };
 
     (@general @attr ($($attr:tt)*) @vis ($($svis:tt)*) @name $name:ident @rest ;) => {
-        derive_read_source! {
+        derive_readable! {
             @unit
             @attr ($($attr)*)
             @vis ($($svis)*)
@@ -147,7 +147,7 @@ macro_rules! derive_read_source {
     };
 
     (@normal @attr ($($attr:tt)*) @vis ($($svis:tt)*) @name $name:ident @fields {$(($($fvis:tt)*) $field:ident: $ty:ty,)*} @rest $cfvis:vis $cfield:ident: $cty:ty, $($tt:tt)*) => {
-        derive_read_source! {
+        derive_readable! {
             @normal
             @attr ($($attr)*)
             @vis ($($svis)*)
@@ -163,7 +163,7 @@ macro_rules! derive_read_source {
     };
 
     (@normal @attr ($($attr:tt)*) @vis ($($svis:tt)*) @name $name:ident @fields {$(($($fvis:tt)*) $field:ident: $ty:ty,)*} @rest $cfield:ident: $cty:ty, $($tt:tt)*) => {
-        derive_read_source! {
+        derive_readable! {
             @normal
             @attr ($($attr)*)
             @vis ($($svis)*)
@@ -199,7 +199,7 @@ macro_rules! derive_read_source {
     };
 
     (@tuple @attr ($($attr:tt)*) @vis ($($svis:tt)*) @name $name:ident @fields ($(($($fvis:tt)*) $ty:ty,)*) @rest $cfvis:vis $cty:ty, $($tt:tt)*) => {
-        derive_read_source! {
+        derive_readable! {
             @tuple
             @attr ($($attr)*)
             @vis ($($svis)*)
@@ -215,7 +215,7 @@ macro_rules! derive_read_source {
     };
 
     (@tuple @attr ($($attr:tt)*) @vis ($($svis:tt)*) @name $name:ident @fields ($(($($fvis:tt)*) $ty:ty,)*) @rest $cty:ty, $($tt:tt)*) => {
-        derive_read_source! {
+        derive_readable! {
             @tuple
             @attr ($($attr)*)
             @vis ($($svis)*)

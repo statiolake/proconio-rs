@@ -1,25 +1,22 @@
+use proconio::input;
 use proconio::source::auto::AutoSource;
-use proconio::types::Usize1;
-use proconio::{derive_read_source, input};
+use proconio_derive::derive_readable;
 
-derive_read_source! {
-    #[derive(PartialEq, Debug)]
-    struct Weight;
-}
+#[derive_readable]
+#[derive(PartialEq, Debug)]
+struct Weight;
 
-derive_read_source! {
-    #[derive(PartialEq, Debug)]
-    struct Cost(pub(crate) i32);
-}
+#[derive_readable]
+#[derive(PartialEq, Debug)]
+struct Cost(pub(crate) i32);
 
-derive_read_source! {
-    #[derive(Debug)]
-    struct Edge {
-        from: usize,
-        pub to: Usize1,
-        pub(in self) weight: Weight,
-        pub(crate) cost: Cost,
-    }
+#[derive_readable]
+#[derive(Debug)]
+struct Edge {
+    from: usize,
+    pub to: proconio::types::Usize1,
+    pub(self) weight: Weight,
+    pub(crate) cost: Cost,
 }
 
 #[test]
