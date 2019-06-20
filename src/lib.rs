@@ -9,6 +9,7 @@ use std::io::{BufReader, Stdin};
 use std::sync::Mutex;
 
 lazy_static! {
+    #[doc(hidden)]
     pub static ref STDIN_SOURCE: Mutex<AutoSource<BufReader<Stdin>>> =
         Mutex::new(AutoSource::new(BufReader::new(io::stdin())));
 }
