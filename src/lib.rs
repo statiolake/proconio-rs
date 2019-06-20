@@ -1,3 +1,4 @@
+#![recursion_limit = "256"]
 pub mod read;
 pub mod source;
 pub mod types;
@@ -16,11 +17,16 @@ lazy_static! {
 /// read input from stdin.
 #[macro_export]
 macro_rules! input {
-    (from $source:expr, $($var:ident: $kind:tt),* $(,)?) => {
+    (from $source:expr $(,)?) => {};
+    (from $source:expr, mut $var:ident: $kind:tt $($rest:tt)*) => {
         let mut s = $source;
-        $(
-            let $var = $crate::read_value!($kind; &mut s);
-        )*
+        let mut $var = $crate::read_value!($kind; &mut s);
+        input!(from &mut s $($rest)*);
+    };
+    (from $source:expr, $var:ident: $kind:tt $($rest:tt)*) => {
+        let mut s = $source;
+        let $var = $crate::read_value!($kind; &mut s);
+        input!(from &mut s $($rest)*);
     };
     ($($rest:tt)*) => {
         let mut locked_stdin = $crate::STDIN_SOURCE.lock().expect("failed to lock the stdin");
@@ -353,5 +359,221 @@ mod tests {
             assert_eq!(from, i * 2);
             assert_eq!(to, i * 2 + 1);
         }
+    }
+
+    #[test]
+    fn input_mut() {
+        let mut source = AutoSource::from("8 1 2 3 4 5 6 7 8");
+        input! {
+            from &mut source,
+            mut n: usize,
+        }
+
+        let mut sum = 0;
+        while n > 0 {
+            input!(from &mut source, x: u32);
+            sum += x;
+            n -= 1;
+        }
+        assert_eq!(sum, 36);
+    }
+
+    #[test]
+    fn input_many() {
+        let mut source = AutoSource::from("1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1");
+        input! {
+            from &mut source,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            _x: i32,
+            x: i32,
+        }
+        assert_eq!(x, 1);
     }
 }
