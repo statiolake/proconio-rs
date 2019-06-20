@@ -255,7 +255,7 @@ mod tests {
 
     #[test]
     fn input_str() {
-        use crate::types::{Chars, Bytes};
+        use crate::types::{Bytes, Chars};
         let source = AutoSource::from("  string   chars\nbytes");
 
         input! {
