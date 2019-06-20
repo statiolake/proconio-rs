@@ -3,8 +3,10 @@ use std::io::BufRead;
 use std::marker::PhantomData;
 use std::str::SplitWhitespace;
 
-/// User input source.  If you use `input!` it obtains stdin, or if you use
-/// `input_from_source!` it obtains the specified source.
+/// Source reading entire content for the first time.
+///
+/// It is a wrapper for `BufRead`.  You can create `OnceSource` from any type implementing
+/// `BufRead`.
 pub struct OnceSource<R: BufRead> {
     // Of course this is not 'static actually, but it is always valid reference
     // while entire `Source` is alive.  The actual lifetime is the context's
@@ -15,8 +17,11 @@ pub struct OnceSource<R: BufRead> {
     // FIXME: find nicer way.
     tokens: SplitWhitespace<'static>,
 
+    // context `tokens` is reffering to
     context: Box<str>,
 
+    // to consume `R`.  Actually `OnceSource` is not need to have `R`, since reading is done in its
+    // constructor.  This is for the consistency with `LineSource` (To use smoothly through `AutoSource`).
     _read: PhantomData<R>,
 }
 
@@ -57,6 +62,9 @@ impl<R: BufRead> Source<R> for OnceSource<R> {
 }
 
 use std::io::BufReader;
+
+/// You can create `LineSource` from `&str`.  Since `&[u8]` is a `Read`, `BufRead` can be easily
+/// created by wrapping using `BufReader`.
 impl<'a> From<&'a str> for OnceSource<BufReader<&'a [u8]>> {
     fn from(s: &'a str) -> OnceSource<BufReader<&'a [u8]>> {
         OnceSource::new(BufReader::new(s.as_bytes()))
