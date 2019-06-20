@@ -7,9 +7,11 @@ pub type Chars = Vec<char>;
 pub type Bytes = Vec<u8>;
 
 /// Usize1: 1-indexed usize.  Output of reading has type usize.
-#[derive(Debug)]
+// Note: I want this to the empty enum (since they shouldn't be instanciated), but doing so causes
+// ICE as of Rust 1.35.
 pub struct Usize1;
 
 /// Isize1: 1-indexed isize.  Output of reading has type isize.
-#[derive(Debug)]
+// Note: I want this to the empty enum (since they shouldn't be instanciated), but doing so causes
+// ICE as of Rust 1.35.
 pub struct Isize1;
