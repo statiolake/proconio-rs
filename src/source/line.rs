@@ -3,18 +3,24 @@ use std::io::BufRead;
 use std::iter::Peekable;
 use std::str::SplitWhitespace;
 
+/// Source reading stream line by line.
+///
+/// It is a wrapper for `BufRead`.  You can create `LineSource` from any type implementing
+/// `BufRead`.
 pub struct LineSource<R: BufRead> {
     // FIXME: This is actually not 'static but it is treated as 'static for the
     // same reason with crate::source::once::Source.  Also there is no way to
     // separate context and tokens since they are private field, this is safe.
     tokens: Peekable<SplitWhitespace<'static>>,
 
+    // context `tokens` reffering to
     current_context: Box<str>,
 
     reader: R,
 }
 
 impl<R: BufRead> LineSource<R> {
+    /// Creates a `LineSource` by specified `BufRead`.
     pub fn new(reader: R) -> LineSource<R> {
         // dummy values.
         LineSource {
@@ -26,7 +32,9 @@ impl<R: BufRead> LineSource<R> {
 }
 
 impl<R: BufRead> Source<R> for LineSource<R> {
+    /// Gets a next token.
     fn next_token(&mut self) -> Option<&str> {
+        // while tokens are empty, reads a new line.
         while self.tokens.peek().is_none() {
             let mut line = String::new();
             self.reader
@@ -43,6 +51,9 @@ impl<R: BufRead> Source<R> for LineSource<R> {
 }
 
 use std::io::BufReader;
+
+/// You can create `LineSource` from `&str`.  Since `&[u8]` is a `Read`, `BufRead` can be easily
+/// created by wrapping using `BufReader`.
 impl<'a> From<&'a str> for LineSource<BufReader<&'a [u8]>> {
     fn from(s: &'a str) -> LineSource<BufReader<&'a [u8]>> {
         LineSource::new(BufReader::new(s.as_bytes()))
