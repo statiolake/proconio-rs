@@ -240,13 +240,8 @@
 //! }
 //! ```
 
-/// Implements `Readable` to the primitives.
 pub mod read;
-
-/// Defines source (whitespace-splitted token stream wrapping actual source like stdin).
 pub mod source;
-
-/// Defines special types and aliases.
 pub mod types;
 
 use crate::source::auto::AutoSource;
