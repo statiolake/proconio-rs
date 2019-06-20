@@ -246,14 +246,20 @@ pub mod types;
 
 use crate::source::auto::AutoSource;
 use lazy_static::lazy_static;
+use std::cell::UnsafeCell;
 use std::io;
-use std::io::{BufReader, Stdin};
+use std::io::stdout;
+use std::io::{BufReader, BufWriter, Stdin, Stdout};
 use std::sync::Mutex;
 
 lazy_static! {
     #[doc(hidden)]
     pub static ref STDIN_SOURCE: Mutex<AutoSource<BufReader<Stdin>>> =
         Mutex::new(AutoSource::new(BufReader::new(io::stdin())));
+}
+
+thread_local! {
+    pub static STDOUT: UnsafeCell<BufWriter<Stdout>> = UnsafeCell::new(BufWriter::new(stdout()));
 }
 
 /// read input from stdin.
@@ -327,6 +333,27 @@ macro_rules! read_value {
     (@ty $ty:ty; $source:expr) => {
         <$ty as $crate::source::Readable>::read($source)
     }
+}
+
+#[macro_export]
+macro_rules! output {
+    ($($tt:tt)*) => {{
+        use std::io::Write as _;
+        $crate::STDOUT.with(|out| write!(unsafe { &mut *out.get() }, $($tt)*).unwrap());
+    }}
+}
+
+#[macro_export]
+macro_rules! outputln {
+    ($($tt:tt)*) => {{
+        use std::io::Write as _;
+        $crate::STDOUT.with(|out| writeln!(unsafe { &mut *out.get() }, $($tt)*).unwrap());
+    }}
+}
+
+pub fn flush_output() {
+    use std::io::Write as _;
+    crate::STDOUT.with(|out| unsafe { &mut *out.get() }.flush().unwrap());
 }
 
 #[cfg(test)]
