@@ -1,9 +1,34 @@
+//! Defines whitespace-splitted token stream wrapping actual stream like stdin.
+//!
+//! The main is trait `Source`.  This is implemented to the following two type of source:
+//!
+//! 1. Read entire source at once.  (`once::OnceSource`)
+//! 1. Read source line by line.  (`line::LineSource`)
+//!
+//! `OnceSource` is very fast, while `LineSource` is handy for local debugging. `OnceSource` must
+//! read entire input before any other work and you must put EOF (Ctrl-D on Unix or Ctrl-Z on
+//! Windows) after input.  LineSource reads source one by one.  Simply press enter to input.
+//!
+//! There is another source named `auto::AutoSource`.  `AutoSource` is `OnceSource` in release build,
+//! is `LineSource` in debug build.  If you use debug build in local testing, `LineSource`,
+//! convenience version is used.  In judge server it is compiled in release mode, so `OnceSource`,
+//! faster version is used.  This is usually no problem in judging (except interactive problem?).
+//!
+//! If you use `input!` macro with no source specified then it uses `AutoSource` with stdin.  So,
+//! locally `LineSource` are used, in the server `OnceSource` are used.  `OnceSource` and
+//! `LineSource` behaves samely in point of the read result, but, unintentionally, it may differ in
+//! a bare possibility. If it should differ, you can manually specify `LineSource` as `source` of
+//! `input!`.
 use std::io::BufRead;
 
 pub mod line;
 pub mod once;
 
 pub mod auto {
+    //! Defines `AutoSource`.
+    //!
+    //! It is `LineSource` for debug build, `OnceSource` for release build.
+
     #[cfg(debug_assertions)]
     pub use super::line::LineSource as AutoSource;
     #[cfg(not(debug_assertions))]
