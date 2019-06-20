@@ -35,16 +35,18 @@ pub mod auto {
     pub use super::once::OnceSource as AutoSource;
 }
 
+/// The main trait. Types implementing this trait can be used for source of `input!` macro.
 pub trait Source<R: BufRead> {
-    /// Gets a next token.
+    /// Gets a whitespace-splitted next token.
     fn next_token(&mut self) -> Option<&str>;
 
-    /// Force gets a next token.
+    /// Force gets a whitespace-splitted next token.
     fn next_token_unwrap(&mut self) -> &str {
         self.next_token().expect("failed to get token")
     }
 }
 
+// &mut S where S: Source is also source.
 impl<R: BufRead, S: Source<R>> Source<R> for &'_ mut S {
     fn next_token(&mut self) -> Option<&str> {
         (*self).next_token()
@@ -53,10 +55,10 @@ impl<R: BufRead, S: Source<R>> Source<R> for &'_ mut S {
 
 /// A trait representing which type can be read from `Source`.
 ///
-/// If you want to read your own type using `input!`, you can implement this
-/// trait for your type.  Alternatively, you can add `#[derive(Readable)]` if
-/// you put `use proconio_derive::Readable` in your source.  It automatically
-/// implements `Readable` if all members of your type are `Readable`.
+/// If you want to read your own type using `input!`, you can implement this trait for your type.
+/// Alternatively, you can add `#[derive_readable]` if you put `use
+/// proconio_derive::derive_readable` in your source.  It automatically implements `Readable` if
+/// all members of your type are `Readable`.
 pub trait Readable {
     type Output;
     fn read<R: BufRead, S: Source<R>>(source: &mut S) -> Self::Output;
