@@ -259,7 +259,7 @@ lazy_static! {
 /// read input from stdin.
 ///
 /// basic syntax is:
-/// ```no_run
+/// ```ignore
 /// input! {
 ///     from source,          // optional: if you omitted, stdin is used by default.
 ///     (mut) variable: type, // mut is optional: mut makes the variable mutable.
