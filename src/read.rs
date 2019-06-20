@@ -1,3 +1,7 @@
+//! Implements readable to the primitives and other special types (such as Chars, Bytes, ...).
+//!
+//! Nothing to document.
+
 use crate::source::{Readable, Source};
 use crate::types::{Bytes, Chars, Isize1, Usize1};
 use std::io::BufRead;
