@@ -1,9 +1,9 @@
 //! Easy IO library for competitive programming.
 //!
-//! `proconio` provides an easy way to read values from stdin (or other source).  The main is
-//! `input!` macro.
+//! `proconio` provides an easy way to read values from stdin (or other source).  The main are
+//! `input!` and `output(ln)!` macro.
 //!
-//! # Examples
+//! # Examples for `input!`
 //!
 //! The macro's user interface is basically the same with [tanakh's input
 //! macro](https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8).
@@ -239,6 +239,23 @@
 //!     assert_eq!(edge.cost, Cost(35));
 //! }
 //! ```
+//!
+//! # Examples for `output!`
+//!
+//! `output!` and `outputln!` is more simple macro.  They are same with `print!` and `println!`
+//! respectively, but bit faster.  So, as you know, you can use them like this.
+//!
+//! ```
+//! # #[macro_use] extern crate proconio;
+//! use proconio::{output, outputln, flush_output};
+//!
+//! output!("{}{}, ", 'h', "ello"); // "hello"       (no newline)
+//! outputln!("{}!", "world");      // "world!\n"
+//! outputln!("{}", 123456789);     // "123456789\n"
+//!
+//! flush_output(); // you may need to flush output before finish
+//! ```
+//!
 
 pub mod read;
 pub mod source;
@@ -259,6 +276,7 @@ lazy_static! {
 }
 
 thread_local! {
+    #[doc(hidden)]
     pub static STDOUT: UnsafeCell<BufWriter<Stdout>> = UnsafeCell::new(BufWriter::new(stdout()));
 }
 
@@ -335,6 +353,10 @@ macro_rules! read_value {
     }
 }
 
+/// Write to stdout.
+///
+/// Faster version of `print!`. the syntax is the same with that.  Technically, this is almost same
+/// with `write!(...).unwrap()` to the `BufWriter<Stdout>`.
 #[macro_export]
 macro_rules! output {
     ($($tt:tt)*) => {{
@@ -343,6 +365,10 @@ macro_rules! output {
     }}
 }
 
+/// Write to stdout.
+///
+/// Faster version of `println!`. the syntax is the same with that.  Technically, this is almost
+/// same with `writeln!(...).unwrap()` to the `BufWriter<Stdout>`.
 #[macro_export]
 macro_rules! outputln {
     ($($tt:tt)*) => {{
@@ -351,6 +377,10 @@ macro_rules! outputln {
     }}
 }
 
+/// Flush the buffer to the stdout.
+///
+/// Usually, stdout will be flushed before finishing the program.  You can manually flush them
+/// using this function.
 pub fn flush_output() {
     use std::io::Write as _;
     crate::STDOUT.with(|out| unsafe { &mut *out.get() }.flush().unwrap());
