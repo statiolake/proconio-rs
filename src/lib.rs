@@ -270,8 +270,8 @@
 //!
 //! # #[fastout]
 //!
-//! If you import `proconio-derive::fastout`, you can use `#[fastout]` attribute.  Adding this
-//! attribute to your `main()`, your `print!` and `println!` will be faster.
+//! If you import `proconio_derive::fastout`, you can use `#[fastout]` attribute.  Adding this
+//! attribute to your `main()`, your `print!` and `println!` become faster.
 //!
 //! ```
 //! # #[macro_use] extern crate proconio;
@@ -284,6 +284,30 @@
 //!     println!("{}", 123456789);     // "123456789\n"
 //! }
 //! ```
+//!
+//! **Note:** This enables buffering to stdout, so if you print something in other functions
+//! between two prints in main, the order of printing may differ.  In other words, the below
+//! example
+//!
+//! ```ignore
+//! fn foo() { println!("between"); }
+//! #[fastout]
+//! fn main() {
+//!     println!("hello");
+//!     foo();
+//!     println!("world");
+//! }
+//! ```
+//!
+//! *likely* prints like
+//!
+//! ```text
+//! between
+//! hello
+//! world
+//! ```
+//!
+//! If you don't like this behavior, you can remove #[fastout] from your `main()`.
 //!
 
 pub mod read;
