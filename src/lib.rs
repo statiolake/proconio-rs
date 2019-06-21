@@ -1,9 +1,9 @@
 //! Easy IO library for competitive programming.
 //!
-//! `proconio` provides an easy way to read values from stdin (or other source).  The main are
-//! `input!` and `output(ln)!` macro.
+//! `proconio` provides an easy way to read values from stdin (or other source).  The main is
+//! `input!` macro.
 //!
-//! # Examples for `input!`
+//! # Examples
 //!
 //! The macro's user interface is basically the same with [tanakh's input
 //! macro](https://qiita.com/tanakh/items/0ba42c7ca36cd29d0ac8).
@@ -267,23 +267,6 @@
 //!     assert_eq!(edge.cost, Cost(35));
 //! }
 //! ```
-//!
-//! # Examples for `output!`
-//!
-//! `output!` and `outputln!` is more simple macro.  They are same with `print!` and `println!`
-//! respectively, but bit faster.  So, as you know, you can use them like this.
-//!
-//! ```
-//! # #[macro_use] extern crate proconio;
-//! use proconio::{output, outputln, flush_output};
-//!
-//! output!("{}{}, ", 'h', "ello"); // "hello"       (no newline)
-//! outputln!("{}!", "world");      // "world!\n"
-//! outputln!("{}", 123456789);     // "123456789\n"
-//!
-//! flush_output(); // you may need to flush output before finish
-//! ```
-//!
 
 pub mod read;
 pub mod source;
@@ -291,21 +274,14 @@ pub mod types;
 
 use crate::source::auto::AutoSource;
 use lazy_static::lazy_static;
-use std::cell::UnsafeCell;
 use std::io;
-use std::io::stdout;
-use std::io::{BufReader, BufWriter, Stdin, Stdout};
+use std::io::{BufReader, Stdin};
 use std::sync::Mutex;
 
 lazy_static! {
     #[doc(hidden)]
     pub static ref STDIN_SOURCE: Mutex<AutoSource<BufReader<Stdin>>> =
         Mutex::new(AutoSource::new(BufReader::new(io::stdin())));
-}
-
-thread_local! {
-    #[doc(hidden)]
-    pub static STDOUT: UnsafeCell<BufWriter<Stdout>> = UnsafeCell::new(BufWriter::new(stdout()));
 }
 
 /// read input from stdin.
@@ -385,39 +361,6 @@ macro_rules! read_value {
     (@ty $ty:ty; $source:expr) => {
         <$ty as $crate::source::Readable>::read($source)
     }
-}
-
-/// Write to stdout.
-///
-/// Faster version of `print!`. the syntax is the same with that.  Technically, this is almost same
-/// with `write!(...).unwrap()` to the `BufWriter<Stdout>`.
-#[macro_export]
-macro_rules! output {
-    ($($tt:tt)*) => {{
-        use std::io::Write as _;
-        $crate::STDOUT.with(|out| write!(unsafe { &mut *out.get() }, $($tt)*).unwrap());
-    }}
-}
-
-/// Write to stdout.
-///
-/// Faster version of `println!`. the syntax is the same with that.  Technically, this is almost
-/// same with `writeln!(...).unwrap()` to the `BufWriter<Stdout>`.
-#[macro_export]
-macro_rules! outputln {
-    ($($tt:tt)*) => {{
-        use std::io::Write as _;
-        $crate::STDOUT.with(|out| writeln!(unsafe { &mut *out.get() }, $($tt)*).unwrap());
-    }}
-}
-
-/// Flush the buffer to the stdout.
-///
-/// Usually, stdout will be flushed before finishing the program.  You can manually flush them
-/// using this function.
-pub fn flush_output() {
-    use std::io::Write as _;
-    crate::STDOUT.with(|out| unsafe { &mut *out.get() }.flush().unwrap());
 }
 
 #[cfg(test)]
