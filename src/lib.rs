@@ -274,7 +274,7 @@
 //! attribute to your `main()`, your `print!` and `println!` become faster.
 //!
 //! ```
-//! # #[macro_use] extern crate proconio;
+//! # extern crate proconio_derive;
 //! use proconio_derive::fastout;
 //!
 //! #[fastout]

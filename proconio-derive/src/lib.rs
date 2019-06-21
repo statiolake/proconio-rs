@@ -4,7 +4,7 @@
 //!
 //! # Examples for `#[derive_readable]`
 //!
-//! ```
+//! ```ignore
 //! # extern crate proconio;
 //! # extern crate proconio_derive;
 //! use proconio::input;
@@ -47,8 +47,7 @@
 //!
 //! # Examples for `#[fastout]`
 //!
-//! ```
-//! # #[macro_use] extern crate proconio;
+//! ```ignore
 //! use proconio_derive::fastout;
 //!
 //! #[fastout]
@@ -85,11 +84,11 @@ pub fn derive_readable(attr: TokenStream, input: TokenStream) -> TokenStream {
 /// ```
 /// use std::io::Write as _;
 /// let __proconio_stdout = std::io::stdout();
-/// let __proconio_stdout = std::io::BufWriter::new(std::io::stdout());
+/// let mut __proconio_stdout = std::io::BufWriter::new(std::io::stdout());
 /// let __proconio_res = {
 ///     // Your code goes here, but `print!(...)` is replaced by
 ///     // `write!(__proconio_stdout, ...).unwrap();`.  The same goes for `println!`.
-/// }
+/// };
 /// __proconio_stdout.flush().unwrap();
 /// return __proconio_res;
 /// ```
