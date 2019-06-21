@@ -268,7 +268,7 @@
 //! }
 //! ```
 //!
-//! # #[fastout]
+//! # `#[fastout]`
 //!
 //! If you import `proconio_derive::fastout`, you can use `#[fastout]` attribute.  Adding this
 //! attribute to your `main()`, your `print!` and `println!` become faster.
