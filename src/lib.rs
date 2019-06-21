@@ -267,6 +267,24 @@
 //!     assert_eq!(edge.cost, Cost(35));
 //! }
 //! ```
+//!
+//! # #[fastout]
+//!
+//! If you import `proconio-derive::fastout`, you can use `#[fastout]` attribute.  Adding this
+//! attribute to your `main()`, your `print!` and `println!` will be faster.
+//!
+//! ```
+//! # #[macro_use] extern crate proconio;
+//! use proconio_derive::fastout;
+//!
+//! #[fastout]
+//! fn main() {
+//!     print!("{}{}, ", 'h', "ello"); // "hello"       (no newline)
+//!     println!("{}!", "world");      // "world!\n"
+//!     println!("{}", 123456789);     // "123456789\n"
+//! }
+//! ```
+//!
 
 pub mod read;
 pub mod source;
