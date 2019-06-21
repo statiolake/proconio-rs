@@ -74,6 +74,34 @@
 //! # );
 //! ```
 //!
+//! If the first input is the length of the array, you can omit the length.  This is the only way
+//! to read jagged array (an array of arrays of which the member arrays can be of different sizes)
+//! at once.  (Of course you can use `input!` multiple times in for-loop to read such an array
+//! since `input!` can be used multiple times.)
+//!
+//! ```
+//! # extern crate proconio;
+//! # use proconio::source::auto::AutoSource;
+//! use proconio::input;
+//! # let source = AutoSource::from("3 3 1 2 3 0 2 1 2");
+//!
+//! input! {
+//! #   from source,
+//!     n: usize,
+//!     a: [[i32]; n],
+//! }
+//!
+//! // if you enter "3  3 1 2 3  0  2 1 2" to the stdin, the result is as follows.
+//! assert_eq!(
+//!     a,
+//!     vec![
+//!         vec![1, 2, 3],
+//!         vec![],
+//!         vec![1, 2],
+//!     ]
+//! );
+//! ```
+//!
 //! Strings can be read as various types:
 //!
 //! ```
@@ -325,6 +353,12 @@ macro_rules! input {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! read_value {
+    // variable length array (first item is a length)
+    ([$kind:tt]; $source:expr) => {{
+        let len = <usize as $crate::source::Readable>::read($source);
+        $crate::read_value!([$kind; len]; $source)
+    }};
+
     // array
     ([$kind:tt; $len:expr]; $source:expr) => {{
         let mut res = Vec::new();
@@ -441,6 +475,28 @@ mod tests {
                 [1, 2, 3, 4, 5],
                 [1, 2, 3, 4, 5],
                 [1, 2, 3, 4, 5]
+            ]
+        );
+    }
+
+    #[test]
+    fn input_vla() {
+        let source = AutoSource::from("5 3 1 2 3 2 1 2 4 1 2 3 4 0 6 1 2 3 4 5 6");
+
+        input! {
+            from source,
+            n: usize,
+            a: [[i32]; n],
+        }
+
+        assert_eq!(
+            a,
+            vec![
+                vec![1, 2, 3],
+                vec![1, 2],
+                vec![1, 2, 3, 4],
+                vec![],
+                vec![1, 2, 3, 4, 5, 6],
             ]
         );
     }
