@@ -3,7 +3,7 @@ use quote::quote;
 use std::borrow::BorrowMut;
 use std::mem::replace;
 use syn::parse_quote;
-use syn::{Block, Expr, ItemFn, Path, Stmt};
+use syn::{Block, Expr, ExprMacro, ItemFn, Path, Stmt};
 
 pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
     if !attr.is_empty() {
@@ -13,21 +13,21 @@ pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
     let mut itemfn: ItemFn = syn::parse(input).expect("failed to parse item");
 
     // replace print
-    replace_print(&mut itemfn.block);
+    replace_print_macro_in_block(&mut itemfn.block);
 
-    // add stdout bufwriter
-    add_stdout_bufwriter(&mut itemfn.block);
+    // adds codes for preparing / flushing BufWriter to the function body.
+    insert_bufwriter_to_block(&mut itemfn.block);
 
     quote!(#itemfn).into()
 }
 
-fn replace_print(block: &mut Block) {
+fn replace_print_macro_in_block(block: &mut Block) {
     for stmt in &mut block.stmts {
-        replace_print_stmt(stmt);
+        replace_print_macro_in_stmt(stmt);
     }
 }
 
-fn replace_print_stmt(stmt: &mut Stmt) {
+fn replace_print_macro_in_stmt(stmt: &mut Stmt) {
     let expr = match stmt {
         Stmt::Local(local) => match &mut local.init {
             Some((_eq, init)) => init.borrow_mut(),
@@ -38,28 +38,28 @@ fn replace_print_stmt(stmt: &mut Stmt) {
         _ => return,
     };
 
-    replace_print_expr(expr);
+    replace_print_macro_in_expr(expr);
 }
 
-fn replace_print_expr(expr: &mut Expr) {
+fn replace_print_macro_in_expr(expr: &mut Expr) {
     macro_rules! rbox {
         ($i:ident) => {
             rbox!($i.expr);
         };
 
         ($e:expr) => {
-            replace_print_expr($e.borrow_mut())
+            replace_print_macro_in_expr($e.borrow_mut())
         };
     }
 
     macro_rules! riter {
         ($i:expr) => {
-            $i.iter_mut().for_each(replace_print_expr)
+            $i.iter_mut().for_each(replace_print_macro_in_expr)
         };
     }
 
-    let mac = match expr {
-        Expr::Macro(mac) => &mut mac.mac,
+    let emac = match expr {
+        Expr::Macro(emac) => emac,
 
         Expr::Box(i) => return rbox!(i),
         Expr::InPlace(i) => {
@@ -86,7 +86,7 @@ fn replace_print_expr(expr: &mut Expr) {
         Expr::Let(i) => return rbox!(i),
         Expr::If(i) => {
             rbox!(i.cond);
-            replace_print(&mut i.then_branch);
+            replace_print_macro_in_block(&mut i.then_branch);
             if let Some((_, e)) = &mut i.else_branch {
                 rbox!((e));
             }
@@ -94,19 +94,19 @@ fn replace_print_expr(expr: &mut Expr) {
         }
         Expr::While(i) => {
             rbox!(i.cond);
-            replace_print(&mut i.body);
+            replace_print_macro_in_block(&mut i.body);
             return;
         }
         Expr::ForLoop(i) => {
             rbox!(i);
-            replace_print(&mut i.body);
+            replace_print_macro_in_block(&mut i.body);
             return;
         }
-        Expr::Loop(i) => return replace_print(&mut i.body),
+        Expr::Loop(i) => return replace_print_macro_in_block(&mut i.body),
         Expr::Match(i) => return rbox!(i),
         Expr::Closure(i) => return rbox!(i.body),
-        Expr::Unsafe(i) => return replace_print(&mut i.block),
-        Expr::Block(i) => return replace_print(&mut i.block),
+        Expr::Unsafe(i) => return replace_print_macro_in_block(&mut i.block),
+        Expr::Block(i) => return replace_print_macro_in_block(&mut i.block),
         Expr::Assign(i) => {
             rbox!(i.left);
             rbox!(i.right);
@@ -148,7 +148,7 @@ fn replace_print_expr(expr: &mut Expr) {
         Expr::Struct(i) => {
             i.fields
                 .iter_mut()
-                .for_each(|f| replace_print_expr(&mut f.expr));
+                .for_each(|f| replace_print_macro_in_expr(&mut f.expr));
             if let Some(rest) = &mut i.rest {
                 rbox!((rest));
             }
@@ -162,17 +162,31 @@ fn replace_print_expr(expr: &mut Expr) {
         Expr::Paren(i) => return rbox!(i),
         Expr::Group(i) => return rbox!(i),
         Expr::Try(i) => return rbox!(i),
-        Expr::Async(i) => return replace_print(&mut i.block),
-        Expr::TryBlock(i) => return replace_print(&mut i.block),
+        Expr::Async(i) => return replace_print_macro_in_block(&mut i.block),
+        Expr::TryBlock(i) => return replace_print_macro_in_block(&mut i.block),
         Expr::Yield(i) => {
             if let Some(e) = &mut i.expr {
                 rbox!((e));
             }
             return;
         }
-        _ => return,
+        Expr::Lit(_) => return,
+        Expr::Path(_) => return,
+        Expr::Continue(_) => return,
+        Expr::Verbatim(_) => return,
     };
 
+    let emac = replace(
+        emac,
+        parse_quote!(compile_error!(
+            "Replacing print macro did not complete.  This is a bug."
+        )),
+    );
+    *expr = generate_print_replaced_expr(emac);
+}
+
+fn generate_print_replaced_expr(emac: ExprMacro) -> Expr {
+    // helper to parse path
     macro_rules! path {
         ($($tt:tt)*) => {
             syn::parse::<Path>(quote!($($tt)*).into())
@@ -182,35 +196,56 @@ fn replace_print_expr(expr: &mut Expr) {
 
     // replace print! -> write!
     let path_print = vec![path!(::std::print), path!(std::print), path!(print)];
-
     let path_println = vec![path!(::std::println), path!(std::println), path!(println)];
 
-    let modify_to = if path_print.contains(&mac.path) {
-        Some(path!(std::write))
-    } else if path_println.contains(&mac.path) {
-        Some(path!(std::writeln))
+    let has_newline = if path_print.contains(&emac.mac.path) {
+        false
+    } else if path_println.contains(&emac.mac.path) {
+        true
     } else {
-        None
+        // If the macro is not `print*!`, do nothing.
+        return Expr::Macro(emac);
     };
 
-    if let Some(modify_to) = modify_to {
-        replace(&mut mac.path, modify_to);
+    // if macro is with new line version, support that.
+    let format_args_args = if has_newline {
+        // take ownership of TokenStream from the macro temporary.
+        let mut tts = emac.mac.tts.into_iter();
 
-        let tts = mac.tts.clone();
-        replace(&mut mac.tts, quote!(__proconio_stdout, #tts));
+        // `lit` must be the format string literal.
+        //  I don't care if `lit` is actually a string literal here since that will be error later
+        //  in `format_args!`.
+        let lit = tts.next();
 
-        let mac = mac.clone();
-        replace(expr, parse_quote!(#mac.unwrap()));
+        // `rest` are format arguments.
+        let rest: proc_macro2::TokenStream = tts.collect();
+
+        // generate the newlined version of format string and interpolate it.
+        match lit {
+            Some(first) => quote!(concat!(#first, "\n") #rest),
+            None => quote!("\n"),
+        }
+    } else {
+        // otherwise, no translations are needed.
+        emac.mac.tts
+    };
+
+    // replace the expression of `print!` and `println!` macro call.
+    parse_quote! {
+        <::std::io::BufWriter<::std::io::StdoutLock> as ::std::io::Write>::write_fmt(
+            &mut __proconio_stdout,
+            format_args!(#format_args_args)
+        )
+        .unwrap()
     }
 }
 
-fn add_stdout_bufwriter(block: &mut Block) {
+fn insert_bufwriter_to_block(block: &mut Block) {
     let replaced: Block = parse_quote! {{
-        use std::io::Write as _;
-        let __proconio_stdout = std::io::stdout();
-        let mut __proconio_stdout = std::io::BufWriter::new(__proconio_stdout.lock());
+        let __proconio_stdout = ::std::io::stdout();
+        let mut __proconio_stdout = ::std::io::BufWriter::new(__proconio_stdout.lock());
         let __proconio_res = #block;
-        __proconio_stdout.flush().unwrap();
+        <::std::io::BufWriter<::std::io::StdoutLock> as ::std::io::Write>::flush(&mut __proconio_stdout).unwrap();
         return __proconio_res;
     }};
 

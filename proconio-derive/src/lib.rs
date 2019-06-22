@@ -1,3 +1,5 @@
+#![recursion_limit = "128"]
+
 //! Macros to easily derive `Readable` and make stdout faster.
 //!
 //! proconio_derive provides two procedural macros (attributes): `derive_readable` and `fastout`.
