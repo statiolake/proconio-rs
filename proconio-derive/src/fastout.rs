@@ -2,6 +2,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use std::borrow::BorrowMut;
 use std::mem::replace;
+use syn::parse_quote;
 use syn::{Block, Expr, ItemFn, Path, Stmt};
 
 pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
@@ -199,32 +200,19 @@ fn replace_print_expr(expr: &mut Expr) {
         replace(&mut mac.tts, quote!(__proconio_stdout, #tts));
 
         let mac = mac.clone();
-        replace(
-            expr,
-            syn::parse(quote!(#mac.unwrap()).into()).expect("adding unwrap failed"),
-        );
+        replace(expr, parse_quote!(#mac.unwrap()));
     }
 }
 
 fn add_stdout_bufwriter(block: &mut Block) {
-    macro_rules! parse {
-        ($($tt:tt)*) => {
-            syn::parse(quote!($($tt)*).into()).expect("inserting bufwriter failed")
-        }
-    }
+    let replaced: Block = parse_quote! {{
+        use std::io::Write as _;
+        let __proconio_stdout = std::io::stdout();
+        let mut __proconio_stdout = std::io::BufWriter::new(__proconio_stdout.lock());
+        let __proconio_res = #block;
+        __proconio_stdout.flush().unwrap();
+        return __proconio_res;
+    }};
 
-    let body = parse!(let __proconio_res = #block;);
-
-    let mut res = vec![
-        parse!(
-            use std::io::Write as _;
-        ),
-        parse!(let __proconio_stdout = std::io::stdout();),
-        parse!(let mut __proconio_stdout = std::io::BufWriter::new(__proconio_stdout.lock());),
-    ];
-    res.push(body);
-    res.push(parse!(__proconio_stdout.flush().unwrap();));
-    res.push(parse!(return __proconio_res;));
-
-    replace(&mut block.stmts, res);
+    replace(block, replaced);
 }
