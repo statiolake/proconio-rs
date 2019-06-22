@@ -28,6 +28,10 @@ fn replace_print(block: &mut Block) {
 
 fn replace_print_stmt(stmt: &mut Stmt) {
     let expr = match stmt {
+        Stmt::Local(local) => match &mut local.init {
+            Some((_eq, init)) => init.borrow_mut(),
+            _ => return,
+        },
         Stmt::Expr(expr) => expr,
         Stmt::Semi(expr, _) => expr,
         _ => return,
