@@ -6,7 +6,7 @@
 //!
 //! # Examples for `#[derive_readable]`
 //!
-//! ```ignore
+//! ```
 //! # extern crate proconio;
 //! # extern crate proconio_derive;
 //! use proconio::input;
@@ -49,7 +49,7 @@
 //!
 //! # Examples for `#[fastout]`
 //!
-//! ```ignore
+//! ```
 //! use proconio_derive::fastout;
 //!
 //! #[fastout]

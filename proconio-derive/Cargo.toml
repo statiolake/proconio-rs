@@ -14,3 +14,6 @@ proc-macro2 = "0.4.30"
 [dependencies.syn]
 version = "0.15.34"
 features = ["full", "extra-traits"]
+
+[dev-dependencies.proconio]
+path = ".."

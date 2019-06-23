@@ -304,7 +304,8 @@
 //! `#[fastout]` enables buffering to stdout, so if you print something in other functions between
 //! two prints in main, the order of printing may differ.  In other words, the below example
 //!
-//! ```ignore
+//! ```
+//! # use proconio_derive::fastout;
 //! fn foo() { println!("between"); }
 //! #[fastout]
 //! fn main() {
