@@ -81,17 +81,35 @@ pub fn derive_readable(attr: TokenStream, input: TokenStream) -> TokenStream {
 
 /// Enables buffering for stdout.
 ///
+/// You cannot create a closure containing `print!` or `println!` in `#[fastout]` function.  This
+/// is because the closure cannot implement `Send` since `StdoutLock`, which is not a `Send`, is
+/// internally captured into the closure.  This causes a trait bound mismatch when used with
+/// function requiring its argument closure to be a `Send`, such as `std::thread::spawn()`.
+///
+/// It is too conservative to make all of such closures compilation error because it is actually no
+/// problem to use such a closure only inside a single thread.  However, since trait bound check is
+/// done after macro expansions, there is no way to check whther the closure is required to be a
+/// `Send` or not.  And the compiler error message for actual mismatch of a `Send` requirement is
+/// too confusing, pointing out codes you didn't write (macro-expanded codes) as an error position.
+/// In conclusion, for user-friendliness, all of them are prohibited for now.
+///
 /// Internally this is the same with
 ///
 /// ```
-/// use std::io::Write as _;
-/// let __proconio_stdout = std::io::stdout();
-/// let mut __proconio_stdout = std::io::BufWriter::new(std::io::stdout());
+/// let __proconio_stdout = ::std::io::stdout();
+/// let mut __proconio_stdout = ::std::io::BufWriter::new(__proconio_stdout.lock());
 /// let __proconio_res = {
-///     // Your code goes here, but `print!(...)` is replaced by
-///     // `write!(__proconio_stdout, ...).unwrap();`.  The same goes for `println!`.
+///     // Your code goes here, with `print!` replaced by
+///     //
+///     // <::std::io::BufWriter<::std::io::StdoutLock> as ::std::io::Write>::write_fmt(
+///     //     &mut __proconio_stdout,
+///     //     format_args!(/* print! macro arguments */)
+///     // ).unwrap()
+///     //
 /// };
-/// __proconio_stdout.flush().unwrap();
+/// <::std::io::BufWriter<::std::io::StdoutLock> as ::std::io::Write>::flush(
+///     &mut __proconio_stdout
+/// ).unwrap();
 /// return __proconio_res;
 /// ```
 #[proc_macro_attribute]

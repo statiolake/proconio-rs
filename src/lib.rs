@@ -285,9 +285,24 @@
 //! }
 //! ```
 //!
-//! **Note:** This enables buffering to stdout, so if you print something in other functions
-//! between two prints in main, the order of printing may differ.  In other words, the below
-//! example
+//! ## Closures having `print!` or `println!` in `#[fastout]` function
+//!
+//! You cannot create a closure containing `print!` or `println!` in `#[fastout]` function.  This
+//! is because the closure becomes thread-unsafe since the closure refers the unlocked stdout
+//! introduced by `#[fastout]` attribute.  If this were not prohibited, an invalid usage of such a
+//! closure would produce a very complex error messages.  For example, `std::thread::spawn()`,
+//! which requires its argument closure to be thread-safe, causes a confusing error.
+//!
+//! Yes, it is too conservative to make all of such closures compilation error because it is
+//! actually no problem to use such a closure only inside a single thread.  This is related to a
+//! limitation in `#[fastout]` implementation.
+//!
+//! For more technical details, see documentation for `#[fastout]` in `proconio-derive`.
+//!
+//! ## Issues of printing order
+//!
+//! `#[fastout]` enables buffering to stdout, so if you print something in other functions between
+//! two prints in main, the order of printing may differ.  In other words, the below example
 //!
 //! ```ignore
 //! fn foo() { println!("between"); }
