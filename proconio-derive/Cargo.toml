@@ -3,6 +3,10 @@ name = "proconio-derive"
 version = "0.1.0"
 authors = ["statiolake <statiolake@gmail.com>"]
 edition = "2018"
+repository = "https://github.com/statiolake/proconio-rs"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+description = "Procedural macros for proconio"
 
 [lib]
 proc-macro = true
@@ -16,4 +20,5 @@ version = "0.15.34"
 features = ["full", "extra-traits"]
 
 [dev-dependencies.proconio]
-path = ".."
+version = "0.1.0"
+path = "../proconio"
