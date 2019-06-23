@@ -138,20 +138,23 @@ fn replace_print_macro_in_expr(expr: &mut Expr) -> Vec<Span> {
                     let ce = quote! {
                         // TODO: replace a dummy documentation url to the actual one.
                         compile_error! {
-                            "Closures in a #[fastout] function cannot contain `print!` or `println!` \
-                            macro\n\
+                            "Closures in a #[fastout] function cannot contain `print!` or \
+                            `println!` macro\n\
                             \n\
-                            note: If you want to run your entire logic in a thread having extended size \
-                            of stack, you can define a new function instead.  See documentation \
-                            (https://.....) for more details.\n\
+                            note: If you want to run your entire logic in a thread having extended \
+                            size of stack, you can define a new function instead.  See \
+                            documentation (https://docs.rs/proconio/0.1.2/proconio/#\
+                            closures-having-print-or-println-in-fastout-function) for more \
+                            details.\n\
                             \n\
-                            note: This is because if you use this closure with `std::thread::spawn()` \
-                            or any other functions requiring `Send` for an argument closure, the \
-                            compiler emits an error about thread unsafety for our internal \
-                            implementations.  If you are using the closure just in a single thread, \
-                            it's actually no problem, but we cannot check the trait bounds at the \
-                            macro-expansion time.  So for now, all closures having `print!` or \
-                            `println!` is prohibited regardless of the `Send` requirements."
+                            note: This is because if you use this closure with \
+                            `std::thread::spawn()` or any other functions requiring `Send` for an \
+                            argument closure, the compiler emits an error about thread unsafety for \
+                            our internal implementations.  If you are using the closure just in a \
+                            single thread, it's actually no problem, but we cannot check the trait \
+                            bounds at the macro-expansion time.  So for now, all closures having \
+                            `print!` or `println!` is prohibited regardless of the `Send` \
+                            requirements."
                         }
                     };
 
