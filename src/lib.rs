@@ -299,6 +299,131 @@
 //!
 //! For more technical details, see documentation for `#[fastout]` in `proconio-derive`.
 //!
+//! ### How to resolve this error
+//!
+//! Consider you want to run this code:
+//!
+//! ```compile_fail
+//! use proconio_derive::fastout;
+//!
+//! #[fastout]
+//! fn main() {
+//!     let thread = std::thread::spawn(|| {
+//!         let x = 3;
+//!         let y = x * x;
+//!         println!("{}", y);
+//!     });
+//!
+//!     thread.join().unwrap();
+//! }
+//! ```
+//!
+//! You will get an error like below.
+//!
+//! ```text
+//! error: Closures in a #[fastout] function cannot contain `print!` or `println!` macro
+//!
+//! note: If you want to run your entire logic in a thread having extended size of stack, you can
+//! define a new function instead.  See documentation (https://.....) for more details.
+//!
+//! note: This is because if you use this closure with `std::thread::spawn()` or any other
+//! functions requiring `Send` for an argument closure, the compiler emits an error about thread
+//! unsafety for our internal implementations.  If you are using the closure just in a single
+//! thread, it's actually no problem, but we cannot check the trait bounds at the macro-expansion
+//! time.  So for now, all closures having `print!` or `println!` is prohibited regardless of the
+//! `Send` requirements.
+//!  --> src/test.rs:10:9
+//!    |
+//! 10 |         println!("{}", y);
+//!    |         ^^^^^^^
+//! ```
+//!
+//! If your `print!` is relying on the calculation in the thread, you can instead return the result
+//! from the thread.
+//!
+//! ```
+//! use proconio_derive::fastout;
+//!
+//! #[fastout]
+//! fn main() {
+//!     let thread = std::thread::spawn(|| {
+//!         let x = 3;
+//!         x * x
+//!     });
+//!
+//!     let y = thread.join().unwrap();
+//! #   assert_eq!(y, 9);
+//!     println!("{}", y);
+//! }
+//! ```
+//!
+//! If you are doing so complex job that it's too difficult to returning the results from your
+//! closure...
+//!
+//! ```compile_fail
+//! use proconio_derive::fastout;
+//!
+//! # fn some_function(_: String) -> impl Iterator<Item = String> { vec!["hello".to_string(), "world".to_string()].into_iter() }
+//! # fn some_proc(x: &str) -> &str { x }
+//!
+//! #[fastout]
+//! fn main() {
+//!     let context = "some context".to_string();
+//!     let thread = std::thread::spawn(move || {
+//!         // Use many println! and the order is very important
+//!         // It's possible to aggregate the result and print it later, but it's not easy to read
+//!         // and seems ugly.
+//!         println!("this is header.");
+//!         for (i, item) in some_function(context).enumerate() {
+//!             print!("Item #{}: ", i);
+//!             print!("{}", some_proc(&item));
+//!             println!("({})", item);
+//!         }
+//!     });
+//!
+//!     thread.join().unwrap();
+//! }
+//! ```
+//!
+//! ...you can use a function instead.
+//!
+//! ```
+//! use proconio_derive::fastout;
+//!
+//! # fn some_function(_: String) -> impl Iterator<Item = String> { vec!["hello".to_string(), "world".to_string()].into_iter() }
+//! # fn some_proc(x: &str) -> &str { x }
+//!
+//! // You can add #[fastout] here
+//! #[fastout]
+//! fn process(context: String) {
+//!     // It's completely OK since this #[fastout] is a thing inside `process()`
+//!     println!("this is header.");
+//!     for (i, item) in some_function(context).enumerate() {
+//!         print!("Item #{}: ", i);
+//!         print!("{}", some_proc(&item));
+//!         println!("({})", item);
+//!     }
+//! }
+//!
+//! // You must not add #[fastout] here!  It causes deadlock.
+//! // #[fastout]
+//! fn main() {
+//!     let context = "some context".to_string();
+//!     let thread = std::thread::spawn(move || process(context));
+//!     thread.join().unwrap();
+//! }
+//! ```
+//!
+//! **Important Note:** If you call another function annotated with `#[fastout]`, you must not add
+//! `#[fastout]` to the caller.  If you add `#[fastout]` in caller too, then the caller has the
+//! lock for the stdout, and so callee cannot acquire the lock forever --- deadlock.  We cannot
+//! warn about this kind of deadlock since we don't know annotations attached to the function to be
+//! called.  (In the above example, we can't know whether the function `process()` has `#[fastout]`
+//! attribute or not.)
+//!
+//! If your code is so complex that you cannot avoid deadlock, you should give up using
+//! `#[fastout]` and simply use `println!` or manually handle your stdout in usual Rust way.
+//!
 //! ## Issues of printing order
 //!
 //! `#[fastout]` enables buffering to stdout, so if you print something in other functions between
