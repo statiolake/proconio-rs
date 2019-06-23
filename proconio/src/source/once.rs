@@ -7,6 +7,7 @@
 
 use super::Source;
 use std::io::BufRead;
+use std::iter::Peekable;
 use std::marker::PhantomData;
 use std::str::SplitWhitespace;
 
@@ -22,7 +23,7 @@ pub struct OnceSource<R: BufRead> {
     // private field.
     //
     // FIXME: find nicer way.
-    tokens: SplitWhitespace<'static>,
+    tokens: Peekable<SplitWhitespace<'static>>,
 
     // context `tokens` is reffering to
     context: Box<str>,
@@ -49,13 +50,13 @@ impl<R: BufRead> OnceSource<R> {
         // it using Source's context.
         let mut res = OnceSource {
             context,
-            tokens: "".split_whitespace(),
+            tokens: "".split_whitespace().peekable(),
             _read: PhantomData,
         };
 
         use std::mem;
         let context: &'static str = unsafe { mem::transmute(&*res.context) };
-        mem::replace(&mut res.tokens, context.split_whitespace());
+        res.tokens = context.split_whitespace().peekable();
 
         res
     }
@@ -65,6 +66,11 @@ impl<R: BufRead> Source<R> for OnceSource<R> {
     /// Gets a next token.
     fn next_token(&mut self) -> Option<&str> {
         self.tokens.next()
+    }
+
+    /// Check if tokens are empty
+    fn is_empty(&mut self) -> bool {
+        self.tokens.peek().is_none()
     }
 }
 

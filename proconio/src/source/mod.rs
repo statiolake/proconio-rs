@@ -47,6 +47,9 @@ pub trait Source<R: BufRead> {
     /// Gets a whitespace-splitted next token.
     fn next_token(&mut self) -> Option<&str>;
 
+    /// Check if tokens are empty
+    fn is_empty(&mut self) -> bool;
+
     /// Force gets a whitespace-splitted next token.
     fn next_token_unwrap(&mut self) -> &str {
         self.next_token().expect("failed to get token")
@@ -57,6 +60,10 @@ pub trait Source<R: BufRead> {
 impl<R: BufRead, S: Source<R>> Source<R> for &'_ mut S {
     fn next_token(&mut self) -> Option<&str> {
         (*self).next_token()
+    }
+
+    fn is_empty(&mut self) -> bool {
+        (*self).is_empty()
     }
 }
 

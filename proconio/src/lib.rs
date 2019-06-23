@@ -477,7 +477,7 @@ lazy_static! {
 /// read input from stdin.
 ///
 /// basic syntax is:
-/// ```ignore
+/// ```text
 /// input! {
 ///     from source,          // optional: if you omitted, stdin is used by default.
 ///     (mut) variable: type, // mut is optional: mut makes the variable mutable.
@@ -551,6 +551,12 @@ macro_rules! read_value {
     (@ty $ty:ty; $source:expr) => {
         <$ty as $crate::source::Readable>::read($source)
     }
+}
+
+pub fn is_stdin_empty() -> bool {
+    use crate::source::Source;
+    let mut lock = STDIN_SOURCE.lock().expect("failed to lock stdin");
+    lock.is_empty()
 }
 
 #[cfg(test)]
@@ -700,6 +706,7 @@ mod tests {
     #[test]
     fn input_mut() {
         let mut source = AutoSource::from("8 1 2 3 4 5 6 7 8");
+
         input! {
             from &mut source,
             mut n: usize,

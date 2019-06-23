@@ -36,24 +36,40 @@ impl<R: BufRead> LineSource<R> {
             reader,
         }
     }
+
+    fn prepare(&mut self) {
+        while self.tokens.peek().is_none() {
+            let mut line = String::new();
+            let num_bytes = self
+                .reader
+                .read_line(&mut line)
+                .expect("failed to get line");
+
+            if num_bytes == 0 {
+                // reached EOF
+                return;
+            }
+
+            self.current_context = line.into_boxed_str();
+            self.tokens = unsafe { std::mem::transmute::<_, &'static str>(&*self.current_context) }
+                .split_whitespace()
+                .peekable();
+        }
+    }
 }
 
 impl<R: BufRead> Source<R> for LineSource<R> {
     /// Gets a next token.
     fn next_token(&mut self) -> Option<&str> {
         // while tokens are empty, reads a new line.
-        while self.tokens.peek().is_none() {
-            let mut line = String::new();
-            self.reader
-                .read_line(&mut line)
-                .expect("failed to get line");
-            self.current_context = line.into_boxed_str();
-            self.tokens = unsafe { std::mem::transmute::<_, &'static str>(&*self.current_context) }
-                .split_whitespace()
-                .peekable();
-        }
-
+        self.prepare();
         self.tokens.next()
+    }
+
+    /// Check if tokens are empty
+    fn is_empty(&mut self) -> bool {
+        self.prepare();
+        self.tokens.peek().is_none()
     }
 }
 

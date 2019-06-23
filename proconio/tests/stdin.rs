@@ -5,18 +5,21 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be copied, modified, or
 // distributed except according to those terms.
 
-use proconio::input;
+use proconio::{input, is_stdin_empty};
 
 #[test]
 #[ignore]
 fn stdin() {
+    assert!(!is_stdin_empty());
     input! {
         n: usize,
     }
+    assert!(!is_stdin_empty());
     eprintln!("{}", n);
 
     for c in 0..n {
         eprintln!("start {}", c);
+        assert!(!is_stdin_empty());
         input! {
             i: isize,
             j: isize,
@@ -24,4 +27,5 @@ fn stdin() {
 
         eprintln!("{} {}", i, j);
     }
+    assert!(is_stdin_empty());
 }
