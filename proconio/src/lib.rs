@@ -553,6 +553,20 @@ macro_rules! read_value {
     }
 }
 
+/// Checks if some of tokens are left on stdin.
+///
+/// This is useful when the number of test cases is not specified like ICPC problems.
+///
+/// ```text
+/// loop {
+///     if is_stdin_empty() {
+///         break;
+///     }
+///
+///     // do the normal logic
+///     input! { ... }
+/// }
+/// ```
 pub fn is_stdin_empty() -> bool {
     use crate::source::Source;
     let mut lock = STDIN_SOURCE.lock().expect("failed to lock stdin");
