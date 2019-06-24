@@ -6,11 +6,12 @@
 // distributed except according to those terms.
 
 use proc_macro::TokenStream;
-use proc_macro2::Span;
+use proc_macro2::{Span as Span2, TokenStream as TokenStream2};
 use quote::quote;
 use quote::ToTokens;
 use std::borrow::BorrowMut;
 use std::mem::replace;
+use syn::spanned::Spanned;
 use syn::{parse_macro_input, parse_quote};
 use syn::{Block, Expr, ExprMacro, ItemFn, Path, Stmt};
 
@@ -26,8 +27,8 @@ pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
         let end = attr.fold(start, |_, item| item.span());
         let compile_error = crate::compile_error_at(
             quote!("no extra attribute is suppported."),
-            Span::from(start),
-            Span::from(end),
+            Span2::from(start),
+            Span2::from(end),
         );
 
         itemfn.block.stmts = vec![compile_error];
@@ -43,7 +44,7 @@ pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
     itemfn.into_token_stream().into()
 }
 
-fn replace_print_macro_in_block(block: &mut Block) -> Vec<Span> {
+fn replace_print_macro_in_block(block: &mut Block) -> Vec<Span2> {
     let mut did_replace = Vec::new();
 
     for stmt in &mut block.stmts {
@@ -53,7 +54,7 @@ fn replace_print_macro_in_block(block: &mut Block) -> Vec<Span> {
     did_replace
 }
 
-fn replace_print_macro_in_stmt(stmt: &mut Stmt) -> Vec<Span> {
+fn replace_print_macro_in_stmt(stmt: &mut Stmt) -> Vec<Span2> {
     let expr = match stmt {
         Stmt::Local(local) => match &mut local.init {
             Some((_eq, init)) => init.borrow_mut(),
@@ -67,7 +68,7 @@ fn replace_print_macro_in_stmt(stmt: &mut Stmt) -> Vec<Span> {
     replace_print_macro_in_expr(expr)
 }
 
-fn replace_print_macro_in_expr(expr: &mut Expr) -> Vec<Span> {
+fn replace_print_macro_in_expr(expr: &mut Expr) -> Vec<Span2> {
     macro_rules! rbox {
         ($e:expr) => {
             replace_print_macro_in_expr($e.borrow_mut())
@@ -271,7 +272,7 @@ fn replace_print_macro_in_expr(expr: &mut Expr) -> Vec<Span> {
     did_replace
 }
 
-fn generate_print_replaced_expr(emac: ExprMacro) -> (Vec<Span>, Expr) {
+fn generate_print_replaced_expr(emac: ExprMacro) -> (Vec<Span2>, Expr) {
     // helper macro to parse path
     macro_rules! path {
         ($($tt:tt)*) => {
@@ -294,8 +295,6 @@ fn generate_print_replaced_expr(emac: ExprMacro) -> (Vec<Span>, Expr) {
     };
 
     // preserve span for returning
-    use syn::spanned::Spanned;
-
     let span = emac.mac.span();
     // if macro is with new line version, support that.
     let format_args_args = if has_newline {
@@ -308,7 +307,7 @@ fn generate_print_replaced_expr(emac: ExprMacro) -> (Vec<Span>, Expr) {
         let lit = tts.next();
 
         // `rest` are format arguments.
-        let rest: proc_macro2::TokenStream = tts.collect();
+        let rest: TokenStream2 = tts.collect();
 
         // generate the newlined version of format string and interpolate it.
         match lit {

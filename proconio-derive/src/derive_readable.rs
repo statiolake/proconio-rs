@@ -6,12 +6,13 @@
 // distributed except according to those terms.
 
 use proc_macro::TokenStream;
-use proc_macro2::Span;
+use proc_macro2::{Span as Span2, TokenStream as TokenStream2};
 use quote::quote;
 use quote::ToTokens;
 use syn::parse_macro_input;
+use syn::parse_quote;
 use syn::spanned::Spanned;
-use syn::{Data, DeriveInput, Fields};
+use syn::{Data, DataStruct, DeriveInput, Fields, Ident, Type};
 
 pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
     if !attr.is_empty() {
@@ -23,8 +24,8 @@ pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
         let end = attr.fold(start, |_, item| item.span());
         let compile_error = crate::compile_error_at(
             quote!("no extra attribute is suppported."),
-            Span::from(start),
-            Span::from(end),
+            Span2::from(start),
+            Span2::from(end),
         );
 
         return compile_error.into_token_stream().into();
@@ -50,18 +51,18 @@ fn replace_type(ast: &mut DeriveInput) -> Result<(), TokenStream> {
     let data = get_data_mut(ast)?;
 
     for field in data.fields.iter_mut() {
-        let new_ty: syn::Type = {
+        let new_ty: Type = {
             let ty = field.ty.clone().into_token_stream();
-            syn::parse_quote!(<#ty as proconio::source::Readable>::Output)
+            parse_quote!(<#ty as proconio::source::Readable>::Output)
         };
 
-        std::mem::replace(&mut field.ty, new_ty);
+        field.ty = new_ty;
     }
 
     Ok(())
 }
 
-fn derive_readable_impl(ast: &DeriveInput) -> Result<proc_macro2::TokenStream, TokenStream> {
+fn derive_readable_impl(ast: &DeriveInput) -> Result<TokenStream2, TokenStream> {
     let name = get_name(ast);
     let fields = &get_data(ast)?.fields;
 
@@ -82,11 +83,11 @@ fn derive_readable_impl(ast: &DeriveInput) -> Result<proc_macro2::TokenStream, T
     Ok(res)
 }
 
-fn get_name(ast: &syn::DeriveInput) -> syn::Ident {
+fn get_name(ast: &DeriveInput) -> Ident {
     ast.ident.clone()
 }
 
-fn get_data(ast: &syn::DeriveInput) -> Result<&syn::DataStruct, TokenStream> {
+fn get_data(ast: &DeriveInput) -> Result<&DataStruct, TokenStream> {
     let start = ast.span();
     let end = ast.ident.span();
 
@@ -104,7 +105,7 @@ fn get_data(ast: &syn::DeriveInput) -> Result<&syn::DataStruct, TokenStream> {
     }
 }
 
-fn get_data_mut(ast: &mut syn::DeriveInput) -> Result<&mut syn::DataStruct, TokenStream> {
+fn get_data_mut(ast: &mut DeriveInput) -> Result<&mut DataStruct, TokenStream> {
     let start = ast.span();
     let end = ast.ident.span();
     let data = &mut ast.data;
@@ -122,11 +123,11 @@ fn get_data_mut(ast: &mut syn::DeriveInput) -> Result<&mut syn::DataStruct, Toke
 }
 
 struct FieldInfo {
-    ident: syn::Ident,
-    read: proc_macro2::TokenStream,
+    ident: Ident,
+    read: TokenStream2,
 }
 
-fn field_info(fields: &syn::Fields) -> Vec<FieldInfo> {
+fn field_info(fields: &Fields) -> Vec<FieldInfo> {
     match fields {
         Fields::Named(_) => field_named(fields),
         Fields::Unnamed(_) => field_unnamed(fields),
@@ -134,7 +135,7 @@ fn field_info(fields: &syn::Fields) -> Vec<FieldInfo> {
     }
 }
 
-fn field_named(fields: &syn::Fields) -> Vec<FieldInfo> {
+fn field_named(fields: &Fields) -> Vec<FieldInfo> {
     let mut res = Vec::new();
 
     for field in fields {
@@ -151,12 +152,12 @@ fn field_named(fields: &syn::Fields) -> Vec<FieldInfo> {
     res
 }
 
-fn field_unnamed(fields: &syn::Fields) -> Vec<FieldInfo> {
+fn field_unnamed(fields: &Fields) -> Vec<FieldInfo> {
     let mut res = Vec::new();
 
     for (idx, field) in fields.iter().enumerate() {
         let ident = format!("field{}", idx);
-        let ident = syn::Ident::new(&ident, Span::call_site());
+        let ident = Ident::new(&ident, Span2::call_site());
         let ty = field.ty.clone();
         let read = quote! {
             let #ident = <#ty as proconio::source::Readable>::read(source);
@@ -168,11 +169,7 @@ fn field_unnamed(fields: &syn::Fields) -> Vec<FieldInfo> {
     res
 }
 
-fn generate(
-    fields: &syn::Fields,
-    name: &syn::Ident,
-    field_info: &[FieldInfo],
-) -> proc_macro2::TokenStream {
+fn generate(fields: &Fields, name: &Ident, field_info: &[FieldInfo]) -> TokenStream2 {
     let idents = field_info.iter().map(|f| &f.ident);
 
     match fields {
