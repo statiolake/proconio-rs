@@ -134,26 +134,26 @@ fn compile_error_at(args: TokenStream2, start: Span2, end: Span2) -> Stmt {
 
     let group = TokenStream::from(args)
         .into_iter()
-        .map(|x| respan(x, Span::call_site()))
+        .map(|x| set_span(x, Span::call_site()))
         .collect();
 
     let mut r = Vec::<TokenTree>::new();
-    r.push(respan(Ident::new("compile_error", start), start));
-    r.push(respan(Punct::new('!', Spacing::Alone), start));
-    r.push(respan(Group::new(Delimiter::Parenthesis, group), end));
-    r.push(respan(Punct::new(';', Spacing::Alone), end));
+    r.push(set_span(Ident::new("compile_error", start), start));
+    r.push(set_span(Punct::new('!', Spacing::Alone), start));
+    r.push(set_span(Group::new(Delimiter::Parenthesis, group), end));
+    r.push(set_span(Punct::new(';', Spacing::Alone), end));
 
     syn::parse(r.into_iter().collect())
         .expect("Failed to parse auto-generated compile_error! macro.  This is a bug.")
 }
 
-fn respan<T: Into<TokenTree>>(token: T, span: Span) -> TokenTree {
+fn set_span<T: Into<TokenTree>>(token: T, span: Span) -> TokenTree {
     let mut token = token.into();
     token.set_span(span);
     token
 }
 
-fn get_span(tokens: TokenStream) -> (Span, Span) {
+fn get_span_range(tokens: TokenStream) -> (Span, Span) {
     let mut tokens = tokens.into_iter();
 
     let start = match tokens.next() {
@@ -165,7 +165,7 @@ fn get_span(tokens: TokenStream) -> (Span, Span) {
     (start, end)
 }
 
-fn set_span<T: ToTokens + Parse>(tokens: T, start: Span, end: Span) -> T {
+fn set_span_range<T: ToTokens + Parse>(tokens: T, start: Span, end: Span) -> T {
     let tokens = TokenStream::from(tokens.into_token_stream()).into_iter();
 
     let mut first = true;

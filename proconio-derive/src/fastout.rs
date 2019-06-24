@@ -19,7 +19,7 @@ pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
     let mut itemfn: ItemFn = parse_macro_input!(input as ItemFn);
 
     if !attr.is_empty() {
-        let (start, end) = crate::get_span(attr);
+        let (start, end) = crate::get_span_range(attr);
 
         let compile_error = crate::compile_error_at(
             quote!("no extra attribute is suppported."),

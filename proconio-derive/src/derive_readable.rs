@@ -53,7 +53,7 @@ fn replace_type(ast: &mut DeriveInput) -> Result<(), TokenStream> {
     for field in data.fields.iter_mut() {
         let (start, end) = {
             let ty = field.ty.clone().into_token_stream();
-            crate::get_span(ty.into())
+            crate::get_span_range(ty.into())
         };
 
         let new_ty: Type = {
@@ -62,7 +62,7 @@ fn replace_type(ast: &mut DeriveInput) -> Result<(), TokenStream> {
         };
 
         // Restore original spanning info
-        let respanned = crate::set_span(new_ty, start, end);
+        let respanned = crate::set_span_range(new_ty, start, end);
         field.ty = respanned;
     }
 
