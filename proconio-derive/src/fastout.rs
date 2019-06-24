@@ -8,17 +8,31 @@
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
+use quote::ToTokens;
 use std::borrow::BorrowMut;
 use std::mem::replace;
-use syn::parse_quote;
+use syn::{parse_macro_input, parse_quote};
 use syn::{Block, Expr, ExprMacro, ItemFn, Path, Stmt};
 
 pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
-    if !attr.is_empty() {
-        panic!("no extra attribute is supported.");
-    }
+    let mut itemfn: ItemFn = parse_macro_input!(input as ItemFn);
 
-    let mut itemfn: ItemFn = syn::parse(input).expect("failed to parse item");
+    if !attr.is_empty() {
+        let mut attr = attr.into_iter();
+        let start = attr
+            .next()
+            .expect("Attribute is empty.  This is a bug.")
+            .span();
+        let end = attr.fold(start, |_, item| item.span());
+        let compile_error = crate::compile_error_at(
+            quote!("no extra attribute is suppported."),
+            Span::from(start),
+            Span::from(end),
+        );
+
+        itemfn.block.stmts = vec![compile_error];
+        return itemfn.into_token_stream().into();
+    }
 
     // replace print
     replace_print_macro_in_block(&mut itemfn.block);
@@ -26,7 +40,7 @@ pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
     // adds codes for preparing / flushing BufWriter to the function body.
     insert_bufwriter_to_block(&mut itemfn.block);
 
-    quote!(#itemfn).into()
+    itemfn.into_token_stream().into()
 }
 
 fn replace_print_macro_in_block(block: &mut Block) -> Vec<Span> {
@@ -262,7 +276,7 @@ fn generate_print_replaced_expr(emac: ExprMacro) -> (Vec<Span>, Expr) {
     macro_rules! path {
         ($($tt:tt)*) => {
             syn::parse::<Path>(quote!($($tt)*).into())
-                .expect("failed to parse path")
+                .expect("Failed to parse path.  This is a bug.")
         };
     }
 

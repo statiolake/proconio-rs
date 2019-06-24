@@ -8,31 +8,46 @@
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
+use quote::ToTokens;
+use syn::parse_macro_input;
+use syn::spanned::Spanned;
 use syn::{Data, DeriveInput, Fields};
 
 pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
     if !attr.is_empty() {
-        panic!("no extra attribute is supported.");
+        let mut attr = attr.into_iter();
+        let start = attr
+            .next()
+            .expect("Attribute is empty.  This is a bug.")
+            .span();
+        let end = attr.fold(start, |_, item| item.span());
+        let compile_error = crate::compile_error_at(
+            quote!("no extra attribute is suppported."),
+            Span::from(start),
+            Span::from(end),
+        );
+
+        return compile_error.into_token_stream().into();
     }
 
-    let mut ast: DeriveInput = syn::parse(input).expect("failed to parse the struct definition.");
+    let mut ast = parse_macro_input!(input as DeriveInput);
 
     // derive actually Readable
-    let derive = derive_readable_impl(&ast);
+    let derive = match derive_readable_impl(&ast) {
+        Ok(derive) => derive,
+        Err(error) => return error,
+    };
 
     // modify AST to use actual Readable::Output type
-    replace_type(&mut ast);
+    if let Err(error) = replace_type(&mut ast) {
+        return error;
+    }
 
     quote!(#ast #derive).into()
 }
 
-fn replace_type(ast: &mut DeriveInput) {
-    use quote::ToTokens;
-
-    let data = match &mut ast.data {
-        Data::Struct(data) => data,
-        _ => panic!("Readable is only derivable for structs."),
-    };
+fn replace_type(ast: &mut DeriveInput) -> Result<(), TokenStream> {
+    let data = get_data_mut(ast)?;
 
     for field in data.fields.iter_mut() {
         let new_ty: syn::Type = {
@@ -42,11 +57,13 @@ fn replace_type(ast: &mut DeriveInput) {
 
         std::mem::replace(&mut field.ty, new_ty);
     }
+
+    Ok(())
 }
 
-fn derive_readable_impl(ast: &DeriveInput) -> proc_macro2::TokenStream {
+fn derive_readable_impl(ast: &DeriveInput) -> Result<proc_macro2::TokenStream, TokenStream> {
     let name = get_name(ast);
-    let fields = &get_data(ast).fields;
+    let fields = &get_data(ast)?.fields;
 
     let field_info = field_info(&fields);
     let generate = generate(&fields, &name, &field_info);
@@ -62,19 +79,45 @@ fn derive_readable_impl(ast: &DeriveInput) -> proc_macro2::TokenStream {
         }
     };
 
-    res
+    Ok(res)
 }
 
 fn get_name(ast: &syn::DeriveInput) -> syn::Ident {
     ast.ident.clone()
 }
 
-fn get_data(ast: &syn::DeriveInput) -> &syn::DataStruct {
+fn get_data(ast: &syn::DeriveInput) -> Result<&syn::DataStruct, TokenStream> {
+    let start = ast.span();
+    let end = ast.ident.span();
+
     let data = &ast.data;
 
     match data {
-        Data::Struct(data) => data,
-        _ => panic!("Readable can only derivable for structs."),
+        Data::Struct(data) => Ok(data),
+        _ => Err(crate::compile_error_at(
+            quote!("Readable can only derivable for structs."),
+            start,
+            end,
+        )
+        .into_token_stream()
+        .into()),
+    }
+}
+
+fn get_data_mut(ast: &mut syn::DeriveInput) -> Result<&mut syn::DataStruct, TokenStream> {
+    let start = ast.span();
+    let end = ast.ident.span();
+    let data = &mut ast.data;
+
+    match data {
+        Data::Struct(data) => Ok(data),
+        _ => Err(crate::compile_error_at(
+            quote!("Readable can only derivable for structs."),
+            start,
+            end,
+        )
+        .into_token_stream()
+        .into()),
     }
 }
 
@@ -96,7 +139,7 @@ fn field_named(fields: &syn::Fields) -> Vec<FieldInfo> {
 
     for field in fields {
         let ident = field.ident.as_ref().cloned();
-        let ident = ident.expect("internal error: named field doesn't have name");
+        let ident = ident.expect("Named field doesn't have name.  This is a bug.");
         let ty = field.ty.clone();
         let read = quote! {
             let #ident = <#ty as proconio::source::Readable>::read(source);
