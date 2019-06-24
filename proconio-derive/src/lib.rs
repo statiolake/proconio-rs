@@ -126,6 +126,7 @@ pub fn fastout(attr: TokenStream, input: TokenStream) -> TokenStream {
 
 use proc_macro::{Delimiter, Group, Ident, Punct, Spacing, Span, TokenTree};
 use syn::Stmt;
+
 fn compile_error_at(
     args: proc_macro2::TokenStream,
     start: proc_macro2::Span,
@@ -153,4 +154,16 @@ fn respan<T: Into<TokenTree>>(token: T, span: Span) -> TokenTree {
     let mut token = token.into();
     token.set_span(span);
     token
+}
+
+fn get_span(tokens: TokenStream) -> (Span, Span) {
+    let mut tokens = tokens.into_iter();
+
+    let start = match tokens.next() {
+        Some(start) => start.span(),
+        None => return (Span::call_site(), Span::call_site()),
+    };
+    let end = tokens.fold(start, |_, item| item.span());
+
+    (start, end)
 }

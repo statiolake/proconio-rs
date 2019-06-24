@@ -19,12 +19,8 @@ pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
     let mut itemfn: ItemFn = parse_macro_input!(input as ItemFn);
 
     if !attr.is_empty() {
-        let mut attr = attr.into_iter();
-        let start = attr
-            .next()
-            .expect("Attribute is empty.  This is a bug.")
-            .span();
-        let end = attr.fold(start, |_, item| item.span());
+        let (start, end) = crate::get_span(attr);
+
         let compile_error = crate::compile_error_at(
             quote!("no extra attribute is suppported."),
             Span2::from(start),
