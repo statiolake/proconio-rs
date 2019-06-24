@@ -51,12 +51,21 @@ fn replace_type(ast: &mut DeriveInput) -> Result<(), TokenStream> {
     let data = get_data_mut(ast)?;
 
     for field in data.fields.iter_mut() {
+        let span = field.ty.span();
+
         let new_ty: Type = {
             let ty = field.ty.clone().into_token_stream();
             parse_quote!(<#ty as ::proconio::source::Readable>::Output)
         };
 
-        field.ty = new_ty;
+        // Restore original spanning info
+        let respanned = syn::parse(
+            TokenStream::from(new_ty.into_token_stream())
+                .into_iter()
+                .map(|tt| crate::respan(tt, span.unwrap()))
+                .collect(),
+        );
+        field.ty = respanned.expect("Failed to parse replaced type.  This is a bug.");
     }
 
     Ok(())
