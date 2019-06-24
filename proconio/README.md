@@ -1,5 +1,8 @@
 # proconio
 
+[![crates.io](https://img.shields.io/crates/v/proconio.svg)](https://crates.io/crates/proconio)
+[![docs.rs](https://docs.rs/proconio/badge.svg)](https://crates.io/crates/proconio)
+
 Easy IO library for competitive programming.
 
 `proconio` provides an easy way to read values from stdin (or other source).  The main is `input!` macro.
