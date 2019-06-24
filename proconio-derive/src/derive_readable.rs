@@ -53,7 +53,7 @@ fn replace_type(ast: &mut DeriveInput) -> Result<(), TokenStream> {
     for field in data.fields.iter_mut() {
         let new_ty: Type = {
             let ty = field.ty.clone().into_token_stream();
-            parse_quote!(<#ty as proconio::source::Readable>::Output)
+            parse_quote!(<#ty as ::proconio::source::Readable>::Output)
         };
 
         field.ty = new_ty;
@@ -71,9 +71,9 @@ fn derive_readable_impl(ast: &DeriveInput) -> Result<TokenStream2, TokenStream> 
     let reads = field_info.iter().map(|f| &f.read);
 
     let res = quote! {
-        impl proconio::source::Readable for #name {
+        impl ::proconio::source::Readable for #name {
             type Output = #name;
-            fn read<R: std::io::BufRead, S: proconio::source::Source<R>>(source: &mut S) -> #name {
+            fn read<R: ::std::io::BufRead, S: ::proconio::source::Source<R>>(source: &mut S) -> #name {
                 #(#reads)*
                 #generate
             }
@@ -143,7 +143,7 @@ fn field_named(fields: &Fields) -> Vec<FieldInfo> {
         let ident = ident.expect("Named field doesn't have name.  This is a bug.");
         let ty = field.ty.clone();
         let read = quote! {
-            let #ident = <#ty as proconio::source::Readable>::read(source);
+            let #ident = <#ty as ::proconio::source::Readable>::read(source);
         };
 
         res.push(FieldInfo { ident, read });
@@ -160,7 +160,7 @@ fn field_unnamed(fields: &Fields) -> Vec<FieldInfo> {
         let ident = Ident::new(&ident, Span2::call_site());
         let ty = field.ty.clone();
         let read = quote! {
-            let #ident = <#ty as proconio::source::Readable>::read(source);
+            let #ident = <#ty as ::proconio::source::Readable>::read(source);
         };
 
         res.push(FieldInfo { ident, read });
