@@ -133,9 +133,9 @@ fn replace_print_macro_in_expr(expr: &mut Expr) -> Vec<Span> {
                 // requires `Send` or not for now.
 
                 // emit an error for each position of print macro.
+                let mut stmts: Vec<Stmt> = Vec::new();
                 for span in did_replace {
-                    // ce stands for "compile error".
-                    let ce = quote! {
+                    let compile_error = quote! {
                         // TODO: replace a dummy documentation url to the actual one.
                         compile_error! {
                             "Closures in a #[fastout] function cannot contain `print!` or \
@@ -159,7 +159,7 @@ fn replace_print_macro_in_expr(expr: &mut Expr) -> Vec<Span> {
                     };
 
                     // re-span the macro to point correct place in diagnostics
-                    let ce: proc_macro2::TokenStream = ce
+                    let compile_error: proc_macro2::TokenStream = compile_error
                         .into_iter()
                         .map(|mut t| {
                             t.set_span(span.clone());
@@ -167,8 +167,10 @@ fn replace_print_macro_in_expr(expr: &mut Expr) -> Vec<Span> {
                         })
                         .collect();
 
-                    *expr = syn::parse2(ce).unwrap();
+                    stmts.push(syn::parse2(compile_error).unwrap())
                 }
+
+                *expr = parse_quote!({ #(#stmts)* });
             }
 
             // To avoid multiple compilation error for the same println, return empty vec.
