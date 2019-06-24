@@ -1,6 +1,6 @@
 [package]
 name = "proconio-derive"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["statiolake <statiolake@gmail.com>"]
 edition = "2018"
 repository = "https://github.com/statiolake/proconio-rs"
@@ -20,5 +20,5 @@ version = "0.15.34"
 features = ["full", "extra-traits"]
 
 [dev-dependencies.proconio]
-version = "0.1.2"
+version = "0.1.0"
 path = "../proconio"
