@@ -123,3 +123,34 @@ pub fn derive_readable(attr: TokenStream, input: TokenStream) -> TokenStream {
 pub fn fastout(attr: TokenStream, input: TokenStream) -> TokenStream {
     fastout::main(attr, input)
 }
+
+use proc_macro::{Delimiter, Group, Ident, Punct, Spacing, Span, TokenTree};
+use syn::Stmt;
+fn compile_error_at(
+    args: proc_macro2::TokenStream,
+    start: proc_macro2::Span,
+    end: proc_macro2::Span,
+) -> Stmt {
+    let start = start.unwrap();
+    let end = end.unwrap();
+
+    let group = TokenStream::from(args)
+        .into_iter()
+        .map(|x| respan(x, Span::call_site()))
+        .collect();
+
+    let mut r = Vec::<TokenTree>::new();
+    r.push(respan(Ident::new("compile_error", start), start));
+    r.push(respan(Punct::new('!', Spacing::Alone), start));
+    r.push(respan(Group::new(Delimiter::Parenthesis, group), end));
+    r.push(respan(Punct::new(';', Spacing::Alone), end));
+
+    syn::parse(r.into_iter().collect())
+        .expect("Failed to parse auto-generated compile_error! macro.  This is a bug.")
+}
+
+fn respan<T: Into<TokenTree>>(token: T, span: Span) -> TokenTree {
+    let mut token = token.into();
+    token.set_span(span);
+    token
+}
