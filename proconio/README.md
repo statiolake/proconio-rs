@@ -1,7 +1,7 @@
 # proconio
 
 [![crates.io](https://img.shields.io/crates/v/proconio.svg)](https://crates.io/crates/proconio)
-[![docs.rs](https://docs.rs/proconio/badge.svg)](https://crates.io/crates/proconio)
+[![docs.rs](https://docs.rs/proconio/badge.svg)](https://docs.rs/proconio)
 
 Easy IO library for competitive programming.
 
