@@ -51,7 +51,10 @@ fn replace_type(ast: &mut DeriveInput) -> Result<(), TokenStream> {
     let data = get_data_mut(ast)?;
 
     for field in data.fields.iter_mut() {
-        let span = field.ty.span();
+        let (start, end) = {
+            let ty = field.ty.clone().into_token_stream();
+            crate::get_span(ty.into())
+        };
 
         let new_ty: Type = {
             let ty = field.ty.clone().into_token_stream();
@@ -59,13 +62,8 @@ fn replace_type(ast: &mut DeriveInput) -> Result<(), TokenStream> {
         };
 
         // Restore original spanning info
-        let respanned = syn::parse(
-            TokenStream::from(new_ty.into_token_stream())
-                .into_iter()
-                .map(|tt| crate::respan(tt, span.unwrap()))
-                .collect(),
-        );
-        field.ty = respanned.expect("Failed to parse replaced type.  This is a bug.");
+        let respanned = crate::set_span(new_ty, start, end);
+        field.ty = respanned;
     }
 
     Ok(())

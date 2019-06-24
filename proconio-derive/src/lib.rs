@@ -68,7 +68,11 @@
 //! ```
 extern crate proc_macro;
 
-use proc_macro::TokenStream;
+use proc_macro::{Delimiter, Group, Ident, Punct, Spacing, Span, TokenStream, TokenTree};
+use proc_macro2::{Span as Span2, TokenStream as TokenStream2};
+use quote::ToTokens;
+use syn::parse::Parse;
+use syn::Stmt;
 
 mod derive_readable;
 mod fastout;
@@ -124,14 +128,7 @@ pub fn fastout(attr: TokenStream, input: TokenStream) -> TokenStream {
     fastout::main(attr, input)
 }
 
-use proc_macro::{Delimiter, Group, Ident, Punct, Spacing, Span, TokenTree};
-use syn::Stmt;
-
-fn compile_error_at(
-    args: proc_macro2::TokenStream,
-    start: proc_macro2::Span,
-    end: proc_macro2::Span,
-) -> Stmt {
+fn compile_error_at(args: TokenStream2, start: Span2, end: Span2) -> Stmt {
     let start = start.unwrap();
     let end = end.unwrap();
 
@@ -166,4 +163,22 @@ fn get_span(tokens: TokenStream) -> (Span, Span) {
     let end = tokens.fold(start, |_, item| item.span());
 
     (start, end)
+}
+
+fn set_span<T: ToTokens + Parse>(tokens: T, start: Span, end: Span) -> T {
+    let tokens = TokenStream::from(tokens.into_token_stream()).into_iter();
+
+    let mut first = true;
+    let tokens = tokens.map(|mut token| {
+        if first {
+            token.set_span(start);
+            first = false;
+        } else {
+            token.set_span(end);
+        }
+
+        token
+    });
+
+    syn::parse(tokens.collect()).expect("Failed to parse respanned token stream.  This is a bug.")
 }
