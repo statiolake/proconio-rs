@@ -495,23 +495,62 @@ lazy_static! {
 /// `Vec<u8>`.)
 #[macro_export]
 macro_rules! input {
-    (from $source:expr $(,)?) => {};
-    (from $source:expr, mut $var:ident: $kind:tt $($rest:tt)*) => {
-        let mut s = $source;
-        let mut $var = $crate::read_value!($kind; &mut s);
-        input!(from &mut s $($rest)*);
+    // terminator
+    (@from [$source:expr] @rest) => {};
+
+    // parse mutability
+    (@from [$source:expr] @rest mut $($rest:tt)*) => {
+        $crate::input! {
+            @from [$source]
+            @mut [mut]
+            @rest $($rest)*
+        }
     };
-    (from $source:expr, $var:ident: $kind:tt $($rest:tt)*) => {
+    (@from [$source:expr] @rest $($rest:tt)*) => {
+        $crate::input! {
+            @from [$source]
+            @mut []
+            @rest $($rest)*
+        }
+    };
+
+    // parse variable identifier
+    (@from [$source:expr] @mut [$($mut:tt)?] @rest $var:ident: $($rest:tt)*) => {
+        $crate::input! {
+            @from [$source]
+            @mut [$($mut)*]
+            @var $var
+            @kind []
+            @rest $($rest)*
+        }
+    };
+
+    // parse kind (type)
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:ident @kind [$($kind:tt)*] @rest) => {
+        let $($mut)* $var = $crate::read_value!(@source [$source] @kind [$($kind)*]);
+    };
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:ident @kind [$($kind:tt)*] @rest, $($rest:tt)*) => {
+        $crate::input!(@from [$source] @mut [$($mut)*] @var $var @kind [$($kind)*] @rest);
+        $crate::input!(@from [$source] @rest $($rest)*);
+    };
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:ident @kind [$($kind:tt)*] @rest $tt:tt $($rest:tt)*) => {
+        $crate::input!(@from [$source] @mut [$($mut)*] @var $var @kind [$($kind)* $tt] @rest $($rest)*);
+    };
+
+    (from $source:expr, $($rest:tt)*) => {
+        #[allow(unused_variables, unused_mut)]
         let mut s = $source;
-        let $var = $crate::read_value!($kind; &mut s);
-        input!(from &mut s $($rest)*);
+        $crate::input! {
+            @from [&mut s]
+            @rest $($rest)*
+        }
     };
     ($($rest:tt)*) => {
         let mut locked_stdin = $crate::STDIN_SOURCE.lock().expect("failed to lock the stdin");
-        input! {
-            from &mut *locked_stdin,
-            $($rest)*
-        };
+        $crate::input! {
+            @from [&mut *locked_stdin]
+            @rest $($rest)*
+        }
         drop(locked_stdin); // release the lock
     };
 }
@@ -519,37 +558,56 @@ macro_rules! input {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! read_value {
-    // variable length array (first item is a length)
-    ([$kind:tt]; $source:expr) => {{
+    // array and variable length array
+    (@source [$source:expr] @kind [[$($kind:tt)*]]) => {
+        $crate::read_value!(@array @source [$source] @kind [] @rest $($kind)*)
+    };
+    (@array @source [$source:expr] @kind [$($kind:tt)*] @rest) => {{
         let len = <usize as $crate::source::Readable>::read($source);
-        $crate::read_value!([$kind; len]; $source)
+        $crate::read_value!(@source [$source] @kind [[$($kind)*; len]])
     }};
-
-    // array
-    ([$kind:tt; $len:expr]; $source:expr) => {{
+    (@array @source [$source:expr] @kind [$($kind:tt)*] @rest ; $($rest:tt)*) => {
+        $crate::read_value!(@array @source [$source] @kind [$($kind)*] @len [$($rest)*])
+    };
+    (@array @source [$source:expr] @kind [$($kind:tt)*] @rest $tt:tt $($rest:tt)*) => {
+        $crate::read_value!(@array @source [$source] @kind [$($kind)* $tt] @rest $($rest)*)
+    };
+    (@array @source [$source:expr] @kind [$($kind:tt)*] @len [$($len:tt)*]) => {{
         let mut res = Vec::new();
-        res.reserve($len);
-        for _ in 0..$len {
-            res.push($crate::read_value!($kind; $source));
+        res.reserve($($len)*);
+        for _ in 0..($($len)*) {
+            res.push($crate::read_value!(@source [$source] @kind [$($kind)*]));
         }
         res
     }};
 
     // tuple
-    (($($kind:tt),*); $source:expr) => {
+    (@source [$source:expr] @kind [($($kinds:tt)*)]) => {
+        $crate::read_value!(@tuple @source [$source] @kinds [] @current [] @rest $($kinds)*)
+    };
+    (@tuple @source [$source:expr] @kinds [$([$($kind:tt)*])*] @current [] @rest) => {
         (
-            $($crate::read_value!($kind; $source),)*
+            $($crate::read_value!(@source [$source] @kind [$($kind)*]),)*
         )
+    };
+    (@tuple @source [$source:expr] @kinds [$($kinds:tt)*] @current [$($curr:tt)*] @rest) => {
+        $crate::read_value!(@tuple @source [$source] @kinds [$($kinds)* [$($curr)*]] @current [] @rest)
+    };
+    (@tuple @source [$source:expr] @kinds [$($kinds:tt)*] @current [$($curr:tt)*] @rest, $($rest:tt)*) => {
+        $crate::read_value!(@tuple @source [$source] @kinds [$($kinds)* [$($curr)*]] @current [] @rest $($rest)*)
+    };
+    (@tuple @source [$source:expr] @kinds [$($kinds:tt)*] @current [$($curr:tt)*] @rest $tt:tt $($rest:tt)*) => {
+        $crate::read_value!(@tuple @source [$source] @kinds [$($kinds)*] @current [$($curr)* $tt] @rest $($rest)*)
+    };
+
+    // unreachable
+    (@source [$source:expr] @kind []) => {
+        compile_error!("Reached unreachable statement while parsing macro input.  This is a bug.");
     };
 
     // normal other
-    ($ty:tt; $source:expr) => {
-        $crate::read_value!(@ty $ty; $source);
-    };
-
-    // actual reading
-    (@ty $ty:ty; $source:expr) => {
-        <$ty as $crate::source::Readable>::read($source)
+    (@source [$source:expr] @kind [$kind:ty]) => {
+        <$kind as $crate::source::Readable>::read($source)
     }
 }
 
@@ -576,6 +634,14 @@ pub fn is_stdin_empty() -> bool {
 #[cfg(test)]
 mod tests {
     use crate::source::auto::AutoSource;
+
+    #[test]
+    fn input_empty() {
+        let source = AutoSource::from("");
+        input! {
+            from source,
+        }
+    }
 
     #[test]
     fn input_number() {
@@ -612,24 +678,18 @@ mod tests {
 
     #[test]
     fn input_array() {
-        let source = AutoSource::from("5 4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
+        let source = AutoSource::from("5 3 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
 
         input! {
             from source,
             n: usize,
             m: usize,
-            a: [[i32; n]; m] // no trailing comma is OK
+            a: [i32; n],
+            b: [[i32; n]; m] // no trailing comma is OK
         }
 
-        assert_eq!(
-            a,
-            [
-                [1, 2, 3, 4, 5],
-                [1, 2, 3, 4, 5],
-                [1, 2, 3, 4, 5],
-                [1, 2, 3, 4, 5]
-            ]
-        );
+        assert_eq!(a, [1, 2, 3, 4, 5]);
+        assert_eq!(b, [[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]]);
     }
 
     #[test]
@@ -733,5 +793,23 @@ mod tests {
             n -= 1;
         }
         assert_eq!(sum, 36);
+    }
+
+    #[test]
+    fn input_with_complex_type() {
+        let mut source = AutoSource::from("Hello\n2\n3 1 2 3\n4 5 ab\n4");
+        input! {
+            from &mut source,
+            hello: std::vec::Vec<u8>,
+            from: crate::types::Usize1,
+            vla: [crate::types::Isize1],
+            tuple: (crate::types::Usize1, crate::types::Isize1, std::vec::Vec<char>),
+            unit: (crate::types::Usize1),
+        }
+        assert_eq!(hello, b"Hello");
+        assert_eq!(from, 1);
+        assert_eq!(vla, [0, 1, 2]);
+        assert_eq!(tuple, (3, 4, vec!['a', 'b']));
+        assert_eq!(unit, (3,));
     }
 }
