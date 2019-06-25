@@ -794,10 +794,10 @@ mod tests {
         let mut source = AutoSource::from("Hello\n2\n3 1 2 3\n4 5 ab\n4");
         input! {
             from &mut source,
-            hello: std::vec::Vec<u8>,
+            hello: crate::types::Bytes,
             from: crate::types::Usize1,
             vla: [crate::types::Isize1],
-            tuple: (crate::types::Usize1, crate::types::Isize1, std::vec::Vec<char>),
+            tuple: (crate::types::Usize1, crate::types::Isize1, crate::types::Chars),
             unit: (crate::types::Usize1),
         }
         assert_eq!(hello, b"Hello");

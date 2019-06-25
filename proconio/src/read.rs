@@ -12,46 +12,28 @@
 use crate::source::{Readable, Source};
 use crate::types::{Bytes, Chars, Isize1, Usize1};
 use std::io::BufRead;
+use std::str::FromStr;
 
-macro_rules! impl_read_source_for_primitives {
-    ($($ty:ty)*) => {
-        $(
-            impl Readable for $ty  {
-                type Output = $ty;
-                fn read<R: BufRead, S: Source<R>>(source: &mut S) -> $ty {
-                    source
-                        .next_token_unwrap()
-                        .parse()
-                        .expect("failed to parse")
-                }
-            }
-        )*
-    }
-}
-
-impl_read_source_for_primitives! {
-    u8 u16 u32 u64 u128 usize
-    i8 i16 i32 i64 i128 isize
-    char bool f32 f64
-}
-
-impl Readable for String {
-    type Output = String;
-    fn read<R: BufRead, S: Source<R>>(source: &mut S) -> String {
-        source.next_token_unwrap().into()
+impl<T: FromStr> Readable for T {
+    type Output = T;
+    fn read<R: BufRead, S: Source<R>>(source: &mut S) -> T {
+        match source.next_token_unwrap().parse() {
+            Ok(v) => v,
+            Err(_e) => panic!("failed to parse input."),
+        }
     }
 }
 
 impl Readable for Chars {
-    type Output = Chars;
-    fn read<R: BufRead, S: Source<R>>(source: &mut S) -> Chars {
+    type Output = Vec<char>;
+    fn read<R: BufRead, S: Source<R>>(source: &mut S) -> Vec<char> {
         source.next_token_unwrap().chars().collect()
     }
 }
 
 impl Readable for Bytes {
-    type Output = Bytes;
-    fn read<R: BufRead, S: Source<R>>(source: &mut S) -> Bytes {
+    type Output = Vec<u8>;
+    fn read<R: BufRead, S: Source<R>>(source: &mut S) -> Vec<u8> {
         source.next_token_unwrap().bytes().collect()
     }
 }

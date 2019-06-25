@@ -8,10 +8,10 @@
 //! Declares special types and aliases.
 
 /// Chars: read a string as array of chars.
-pub type Chars = Vec<char>;
+pub struct Chars;
 
 /// Bytes: read a string as array of bytes.
-pub type Bytes = Vec<u8>;
+pub struct Bytes;
 
 /// Usize1: 1-indexed usize.  Output of reading has type usize.
 // Note: I want this to the empty enum (since they shouldn't be instanciated), but doing so causes
