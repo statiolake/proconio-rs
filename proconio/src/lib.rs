@@ -109,7 +109,7 @@
 //! );
 //! ```
 //!
-//! Strings can be read as various types:
+//! Strings can be read as `Vec<u8>` or `Vec<char>`.  Use `Bytes` and `Chars` to do so:
 //!
 //! ```
 //! # extern crate proconio;
@@ -200,9 +200,9 @@
 //! }
 //! ```
 //!
-//! Some special types exists.  `Usize1` and `Isize1` are.  They are read as `usize` and `isize`
-//! respectively, but the read value is decremented.  It enables us to automatically convert
-//! 1-indexed vertices numbers to 0-indexed array indices.
+//! In addition to `Chars` and `Bytes`, `Usize1` and `Isize1` are also special types.  They are
+//! read as `usize` and `isize` respectively, but the read value is decremented.  It enables us to
+//! automatically convert 1-indexed vertices numbers to 0-indexed array indices.
 //!
 //! ```
 //! # extern crate proconio;
@@ -224,11 +224,12 @@
 //! assert_eq!(edges[3], (4, 2));
 //! ```
 //!
-//! `Usize1` and `Isize1` is a simple unit struct.  This type is only used to tell "how to read the
-//! value".  It can be defined by `Readable` trait.  This trait doesn't require the output type to
-//! be the same with the implementor.  `Usize1` is implementing `Readable` trait, and there it
-//! defines the type of read value is `usize`.  You can implement `Readable` for your own type to
-//! read values in customized way.
+//! `Usize1` and `Isize1` doesn't hold actual value, so they're simple unit struct.  Thus, they are
+//! only useful inside `input!` or `#[derive_readable]`.  You can think the reason these types
+//! exist is to tell "how to read the value".  This how-to can be defined through `Readable` trait.
+//! This trait doesn't require the output type to be the same with the implementor.  `Usize1` is
+//! implementing `Readable` trait, and there the type of read value is defined as `usize`.  You can
+//! implement `Readable` for your own type to read values in customized way.
 //!
 //! Finally, you can make your own types `Readable` using `#[derive_readable]` attribute.  Types
 //! used in the struct are automatically translated to their output types, so a member declared as
