@@ -34,7 +34,7 @@
 //! #[derive(Debug)]
 //! struct Edge {
 //!     from: usize,
-//!     to: proconio::types::Usize1, // The real Edge::to has type usize.
+//!     to: proconio::marker::Usize1, // The real Edge::to has type usize.
 //!     weight: Weight,
 //!     cost: Cost,
 //! }

@@ -21,7 +21,7 @@ struct Cost(pub(crate) i32);
 #[derive(Debug)]
 struct Edge {
     from: usize,
-    pub to: proconio::types::Usize1,
+    pub to: proconio::marker::Usize1,
     pub(self) weight: Weight,
     pub(crate) cost: Cost,
 }

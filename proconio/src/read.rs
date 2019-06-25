@@ -9,8 +9,8 @@
 //!
 //! Nothing to document.
 
+use crate::marker::{Bytes, Chars, Isize1, Usize1};
 use crate::source::{Readable, Source};
-use crate::types::{Bytes, Chars, Isize1, Usize1};
 use std::io::BufRead;
 use std::str::FromStr;
 

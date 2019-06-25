@@ -115,7 +115,7 @@
 //! # extern crate proconio;
 //! # use proconio::source::auto::AutoSource;
 //! use proconio::input;
-//! use proconio::types::{Bytes, Chars};
+//! use proconio::marker::{Bytes, Chars};
 //! # let source = AutoSource::from("  string   chars\nbytes");
 //!
 //! input! {
@@ -208,7 +208,7 @@
 //! # extern crate proconio;
 //! # use proconio::source::auto::AutoSource;
 //! use proconio::input;
-//! use proconio::types::Usize1;
+//! use proconio::marker::Usize1;
 //! # let mut source = AutoSource::from("4   1 3   3 4   6 1   5 3");
 //!
 //! input! {
@@ -255,7 +255,7 @@
 //! #[derive(Debug)]
 //! struct Edge {
 //!     from: usize,
-//!     to: proconio::types::Usize1, // The real Edge::to has type usize.
+//!     to: proconio::marker::Usize1, // The real Edge::to has type usize.
 //!     weight: Weight,
 //!     cost: Cost,
 //! }
@@ -458,9 +458,9 @@
 //! If you don't like this behavior, you can remove #[fastout] from your `main()`.
 //!
 
+pub mod marker;
 pub mod read;
 pub mod source;
-pub mod types;
 
 use crate::source::auto::AutoSource;
 use lazy_static::lazy_static;
@@ -655,7 +655,7 @@ mod tests {
 
     #[test]
     fn input_str() {
-        use crate::types::{Bytes, Chars};
+        use crate::marker::{Bytes, Chars};
         let source = AutoSource::from("  string   chars\nbytes");
 
         input! {
@@ -751,7 +751,7 @@ mod tests {
 
     #[test]
     fn input_iusize1() {
-        use crate::types::Usize1;
+        use crate::marker::Usize1;
 
         let mut source = AutoSource::from("4 1 2 3 4 5 6 7 8");
 
@@ -794,11 +794,11 @@ mod tests {
         let mut source = AutoSource::from("Hello\n2\n3 1 2 3\n4 5 ab\n4");
         input! {
             from &mut source,
-            hello: crate::types::Bytes,
-            from: crate::types::Usize1,
-            vla: [crate::types::Isize1],
-            tuple: (crate::types::Usize1, crate::types::Isize1, crate::types::Chars),
-            unit: (crate::types::Usize1),
+            hello: crate::marker::Bytes,
+            from: crate::marker::Usize1,
+            vla: [crate::marker::Isize1],
+            tuple: (crate::marker::Usize1, crate::marker::Isize1, crate::marker::Chars),
+            unit: (crate::marker::Usize1),
         }
         assert_eq!(hello, b"Hello");
         assert_eq!(from, 1);
