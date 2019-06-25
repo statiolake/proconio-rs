@@ -5,20 +5,16 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be copied, modified, or
 // distributed except according to those terms.
 
-//! Declares special types and aliases.
+//! Declares special marker types.
 
 /// Chars: read a string as array of chars.
-pub struct Chars;
+pub enum Chars {}
 
 /// Bytes: read a string as array of bytes.
-pub struct Bytes;
+pub enum Bytes {}
 
 /// Usize1: 1-indexed usize.  Output of reading has type usize.
-// Note: I want this to the empty enum (since they shouldn't be instanciated), but doing so causes
-// ICE as of Rust 1.35.
-pub struct Usize1;
+pub enum Usize1 {}
 
 /// Isize1: 1-indexed isize.  Output of reading has type isize.
-// Note: I want this to the empty enum (since they shouldn't be instanciated), but doing so causes
-// ICE as of Rust 1.35.
-pub struct Isize1;
+pub enum Isize1 {}

@@ -224,12 +224,12 @@
 //! assert_eq!(edges[3], (4, 2));
 //! ```
 //!
-//! `Usize1` and `Isize1` doesn't hold actual value, so they're simple unit struct.  Thus, they are
-//! only useful inside `input!` or `#[derive_readable]`.  You can think the reason these types
-//! exist is to tell "how to read the value".  This how-to can be defined through `Readable` trait.
-//! This trait doesn't require the output type to be the same with the implementor.  `Usize1` is
-//! implementing `Readable` trait, and there the type of read value is defined as `usize`.  You can
-//! implement `Readable` for your own type to read values in customized way.
+//! `Usize1` and `Isize1` doesn't hold actual value, so you cannot have value of the type.  Thus,
+//! they are only useful inside `input!` or `#[derive_readable]`.  You can think the reason these
+//! types exist is to tell "how to read the value".  This how-to can be defined through `Readable`
+//! trait.  This trait doesn't require the output type to be the same with the implementor.
+//! `Usize1` is implementing `Readable` trait, and there the type of read value is defined as
+//! `usize`.  You can implement `Readable` for your own type to read values in customized way.
 //!
 //! Finally, you can make your own types `Readable` using `#[derive_readable]` attribute.  Types
 //! used in the struct are automatically translated to their output types, so a member declared as
