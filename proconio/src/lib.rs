@@ -487,12 +487,6 @@ lazy_static! {
 /// the trailing comma is optional.  `source` can be anything implementing `Source`.  This macro
 /// moves out the specified source.  If you want to prevent moving, you can use `&mut source` since
 /// `&mut S` where `S: Source` also implements `Source`.
-///
-/// **Note:** for macro matcher's limitation, only a single token tree (`i32`, `[T; n]`, `(T, U)` or
-/// etc) is accepted by `type`. This means you can't use generics `YourType<T>` as the type.  To
-/// use such a type, you can alias it like `type YourTypeT = YourType<T>` to make it a single token
-/// tree.  (This is why `Chars` and `Bytes` exists.  They are simply alias of `Vec<char>` and
-/// `Vec<u8>`.)
 #[macro_export]
 macro_rules! input {
     // terminator
