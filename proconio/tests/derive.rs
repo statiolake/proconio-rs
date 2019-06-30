@@ -5,9 +5,8 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be copied, modified, or
 // distributed except according to those terms.
 
-use proconio::input;
 use proconio::source::auto::AutoSource;
-use proconio_derive::derive_readable;
+use proconio::{derive_readable, input};
 
 #[derive_readable]
 #[derive(PartialEq, Debug)]
