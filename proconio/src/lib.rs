@@ -237,9 +237,10 @@
 //!
 //! ```
 //! # extern crate proconio;
+//! # extern crate proconio_derive;
 //! use proconio::input;
 //! # use proconio::source::auto::AutoSource;
-//! use proconio::derive_readable;
+//! use proconio_derive::derive_readable;
 //!
 //! // Unit struct can derive readable.  This generates a no-op for the reading.  Not ignoring
 //! // the read value, but simply skip reading process.  You cannot use it to discard the input.
@@ -277,11 +278,12 @@
 //!
 //! # `#[fastout]`
 //!
-//! If you import `proconio::fastout`, you can use `#[fastout]` attribute.  Adding this
+//! If you import `proconio_derive::fastout`, you can use `#[fastout]` attribute.  Adding this
 //! attribute to your `main()`, your `print!` and `println!` become faster.
 //!
 //! ```
-//! use proconio::fastout;
+//! # extern crate proconio_derive;
+//! use proconio_derive::fastout;
 //!
 //! #[fastout]
 //! fn main() {
@@ -310,7 +312,7 @@
 //! Consider you want to run this code:
 //!
 //! ```compile_fail
-//! use proconio::fastout;
+//! use proconio_derive::fastout;
 //!
 //! #[fastout]
 //! fn main() {
@@ -348,7 +350,7 @@
 //! from the thread.
 //!
 //! ```
-//! use proconio::fastout;
+//! use proconio_derive::fastout;
 //!
 //! #[fastout]
 //! fn main() {
@@ -367,7 +369,7 @@
 //! closure...
 //!
 //! ```compile_fail
-//! use proconio::fastout;
+//! use proconio_derive::fastout;
 //!
 //! # fn some_function(_: String) -> impl Iterator<Item = String> { vec!["hello".to_string(), "world".to_string()].into_iter() }
 //! # fn some_proc(x: &str) -> &str { x }
@@ -394,7 +396,7 @@
 //! ...you can use a function instead.
 //!
 //! ```
-//! use proconio::fastout;
+//! use proconio_derive::fastout;
 //!
 //! # fn some_function(_: String) -> impl Iterator<Item = String> { vec!["hello".to_string(), "world".to_string()].into_iter() }
 //! # fn some_proc(x: &str) -> &str { x }
@@ -436,7 +438,7 @@
 //! two prints in main, the order of printing may differ.  In other words, the below example
 //!
 //! ```
-//! # use proconio::fastout;
+//! # use proconio_derive::fastout;
 //! fn foo() { println!("between"); }
 //! #[fastout]
 //! fn main() {
@@ -460,8 +462,6 @@
 pub mod marker;
 pub mod read;
 pub mod source;
-
-pub use proconio_derive::*;
 
 use crate::source::auto::AutoSource;
 use lazy_static::lazy_static;
