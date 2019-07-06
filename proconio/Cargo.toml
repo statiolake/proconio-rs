@@ -1,6 +1,6 @@
 [package]
 name = "proconio"
-version = "0.2.2"
+version = "0.3.0"
 authors = ["statiolake <statiolake@gmail.com>"]
 edition = "2018"
 repository = "https://github.com/statiolake/proconio-rs"
