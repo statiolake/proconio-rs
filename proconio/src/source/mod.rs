@@ -16,10 +16,36 @@
 //! read entire input before any other work and you must put EOF (Ctrl-D on Unix or Ctrl-Z on
 //! Windows) after input.  LineSource reads source one by one.  Simply press enter to input.
 //!
-//! There is another source named `auto::AutoSource`.  `AutoSource` is `OnceSource` in release build,
-//! is `LineSource` in debug build.  If you use debug build in local testing, `LineSource`,
+//! There is another source named `auto::AutoSource`.  `AutoSource` is `OnceSource` in release
+//! build, is `LineSource` in debug build.  If you use debug build in local testing, `LineSource`,
 //! convenience version is used.  In judge server it is compiled in release mode, so `OnceSource`,
 //! faster version is used.  This is usually no problem in judging (except interactive problem?).
+//!
+//! You can specify the source to be used in `input!` as follows:
+//!
+//! ```
+//! # extern crate proconio;
+//! use proconio::source::auto::AutoSource;
+//! use proconio::input;
+//!
+//! let source = AutoSource::from("32 54 -23");
+//! input! {
+//!     from source,
+//!     n: u8,
+//!     m: u32,
+//!     l: i32,
+//! }
+//!
+//! println!("{} {} {}", n, m, l);
+//! assert_eq!(n, 32);
+//! assert_eq!(m, 54);
+//! assert_eq!(l, -23);
+//! ```
+//!
+//! In above example, `OnceSource<BufReader<&[u8]>>` and `LineSource<BufReader<&[u8]>>` implements
+//! `From<&str>`, so you can create the source from a string literal.  You can create an instance
+//! directly from the value of type implementing `BufRead` by using `OnceSource::new()` and
+//! `LineSource::new()`.
 //!
 //! If you use `input!` macro with no source specified then it uses `AutoSource` with stdin.  So,
 //! locally `LineSource` are used, in the server `OnceSource` are used.  `OnceSource` and
