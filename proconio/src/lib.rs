@@ -68,7 +68,7 @@
 //! #    from source,
 //!     n: usize,
 //!     m: usize,
-//!     a: [[i32; n]; m] // `a` is Vec<Vec<i32>>, (n, m)-matrix.
+//!     a: [[i32; n]; m] // `a` is Vec<Vec<i32>>, (m, n)-matrix.
 //! }
 //! # assert_eq!(
 //! #     a,
