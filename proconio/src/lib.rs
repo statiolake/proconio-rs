@@ -422,12 +422,13 @@
 //! }
 //! ```
 //!
-//! **Important Note:** If you call another function annotated with `#[fastout]`, you must not add
-//! `#[fastout]` to the caller.  If you add `#[fastout]` in caller too, then the caller has the
-//! lock for the stdout, and so callee cannot acquire the lock forever --- deadlock.  We cannot
-//! warn about this kind of deadlock since we don't know annotations attached to the function to be
-//! called.  (In the above example, we can't know whether the function `process()` has `#[fastout]`
-//! attribute or not.)
+//! **Important Note:** If you *spawn a new thread* which runs another function annotated with
+//! `#[fastout]`, you must not add `#[fastout]` to the caller.  If you add `#[fastout]` in caller
+//! too, then the caller has the lock for the stdout, and so callee cannot acquire the lock forever
+//! --- deadlock.  This is not the case when the caller and callee is executed in the same thread,
+//! since the lock of stdout is reentrant.  We cannot warn about this kind of deadlock since we don't
+//! know annotations attached to the function to be called.  (In the above example, we can't know
+//! whether the function `process()` has `#[fastout]` attribute or not.)
 //!
 //! If your code is so complex that you cannot avoid deadlock, you should give up using
 //! `#[fastout]` and simply use `println!` or manually handle your stdout in usual Rust way.
