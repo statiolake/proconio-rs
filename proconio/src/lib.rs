@@ -569,12 +569,10 @@ macro_rules! read_value {
         $crate::read_value!(@array @source [$source] @kind [$($kind)* $tt] @rest $($rest)*)
     };
     (@array @source [$source:expr] @kind [$($kind:tt)*] @len [$($len:tt)*]) => {{
-        let mut res = Vec::new();
-        res.reserve($($len)*);
-        for _ in 0..($($len)*) {
-            res.push($crate::read_value!(@source [$source] @kind [$($kind)*]));
-        }
-        res
+        let len = $($len)*;
+        (0..len)
+            .map(|_| $crate::read_value!(@source [$source] @kind [$($kind)*]))
+            .collect::<Vec<_>>()
     }};
 
     // tuple
