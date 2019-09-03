@@ -236,11 +236,12 @@
 //! `Usize1` has type `usize` as real struct.
 //!
 //! ```
+//! # #[cfg(feature = "derive")]
+//! # {
 //! # extern crate proconio;
-//! # extern crate proconio_derive;
 //! use proconio::input;
 //! # use proconio::source::auto::AutoSource;
-//! use proconio_derive::derive_readable;
+//! use proconio::derive_readable;
 //!
 //! // Unit struct can derive readable.  This generates a no-op for the reading.  Not ignoring
 //! // the read value, but simply skip reading process.  You cannot use it to discard the input.
@@ -274,16 +275,19 @@
 //!     assert_eq!(edge.weight, Weight);
 //!     assert_eq!(edge.cost, Cost(35));
 //! }
+//! # }
 //! ```
 //!
 //! # `#[fastout]`
 //!
-//! If you import `proconio_derive::fastout`, you can use `#[fastout]` attribute.  Adding this
-//! attribute to your `main()`, your `print!` and `println!` become faster.
+//! If you import `proconio::fastout`, you can use `#[fastout]` attribute.  Adding this attribute
+//! to your `main()`, your `print!` and `println!` become faster.
 //!
 //! ```
-//! # extern crate proconio_derive;
-//! use proconio_derive::fastout;
+//! # #[cfg(feature = "derive")]
+//! # {
+//! # extern crate proconio;
+//! use proconio::fastout;
 //!
 //! #[fastout]
 //! fn main() {
@@ -291,6 +295,7 @@
 //!     println!("{}!", "world");      // "world!\n"
 //!     println!("{}", 123456789);     // "123456789\n"
 //! }
+//! # }
 //! ```
 //!
 //! ## Closures having `print!` or `println!` in `#[fastout]` function
@@ -312,7 +317,7 @@
 //! Consider you want to run this code:
 //!
 //! ```compile_fail
-//! use proconio_derive::fastout;
+//! use proconio::fastout;
 //!
 //! #[fastout]
 //! fn main() {
@@ -350,7 +355,9 @@
 //! from the thread.
 //!
 //! ```
-//! use proconio_derive::fastout;
+//! # #[cfg(feature = "derive")]
+//! # {
+//! use proconio::fastout;
 //!
 //! #[fastout]
 //! fn main() {
@@ -363,13 +370,14 @@
 //! #   assert_eq!(y, 9);
 //!     println!("{}", y);
 //! }
+//! # }
 //! ```
 //!
 //! If you are doing so complex job that it's too difficult to returning the results from your
 //! closure...
 //!
 //! ```compile_fail
-//! use proconio_derive::fastout;
+//! use proconio::fastout;
 //!
 //! # fn some_function(_: String) -> impl Iterator<Item = String> { vec!["hello".to_string(), "world".to_string()].into_iter() }
 //! # fn some_proc(x: &str) -> &str { x }
@@ -396,7 +404,9 @@
 //! ...you can use a function instead.
 //!
 //! ```
-//! use proconio_derive::fastout;
+//! # #[cfg(feature = "derive")]
+//! # {
+//! use proconio::fastout;
 //!
 //! # fn some_function(_: String) -> impl Iterator<Item = String> { vec!["hello".to_string(), "world".to_string()].into_iter() }
 //! # fn some_proc(x: &str) -> &str { x }
@@ -420,15 +430,16 @@
 //!     let thread = std::thread::spawn(move || process(context));
 //!     thread.join().unwrap();
 //! }
+//! # }
 //! ```
 //!
 //! **Important Note:** If you *spawn a new thread* which runs another function annotated with
 //! `#[fastout]`, you must not add `#[fastout]` to the caller.  If you add `#[fastout]` in caller
 //! too, then the caller has the lock for the stdout, and so callee cannot acquire the lock forever
 //! --- deadlock.  This is not the case when the caller and callee is executed in the same thread,
-//! since the lock of stdout is reentrant.  We cannot warn about this kind of deadlock since we don't
-//! know annotations attached to the function to be called.  (In the above example, we can't know
-//! whether the function `process()` has `#[fastout]` attribute or not.)
+//! since the lock of stdout is reentrant.  We cannot warn about this kind of deadlock since we
+//! don't know annotations attached to the function to be called.  (In the above example, we can't
+//! know whether the function `process()` has `#[fastout]` attribute or not.)
 //!
 //! If your code is so complex that you cannot avoid deadlock, you should give up using
 //! `#[fastout]` and simply use `println!` or manually handle your stdout in usual Rust way.
@@ -439,7 +450,9 @@
 //! two prints in main, the order of printing may differ.  In other words, the below example
 //!
 //! ```
-//! # use proconio_derive::fastout;
+//! # #[cfg(feature = "derive")]
+//! # {
+//! # use proconio::fastout;
 //! fn foo() { println!("between"); }
 //! #[fastout]
 //! fn main() {
@@ -447,6 +460,7 @@
 //!     foo();
 //!     println!("world");
 //! }
+//! # }
 //! ```
 //!
 //! *likely* prints like
@@ -459,6 +473,9 @@
 //!
 //! If you don't like this behavior, you can remove #[fastout] from your `main()`.
 //!
+
+#[cfg(feature = "derive")]
+pub use proconio_derive::*;
 
 pub mod marker;
 pub mod read;
