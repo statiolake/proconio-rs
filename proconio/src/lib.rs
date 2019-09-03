@@ -235,6 +235,21 @@
 //! used in the struct are automatically translated to their output types, so a member declared as
 //! `Usize1` has type `usize` as real struct.
 //!
+//! **Note:** Using `#[derive_readable]` requires `derive` feature enabled.  To do so, open your
+//! Cargo.toml and modify the line of proconio from:
+//!
+//! ```toml
+//! proconio = "=(version)"
+//! ```
+//!
+//! to:
+//!
+//! ```toml
+//! proconio = { version = "=(version)", features = ["derive"] }
+//! ```
+//!
+//! Example of `#[derive_readable]`:
+//!
 //! ```
 //! # #[cfg(feature = "derive")]
 //! # {
@@ -282,6 +297,21 @@
 //!
 //! If you import `proconio::fastout`, you can use `#[fastout]` attribute.  Adding this attribute
 //! to your `main()`, your `print!` and `println!` become faster.
+//!
+//! **Note:** Using `#[proconio::fastout]` requires `derive` feature enabled.  To do so, open your
+//! Cargo.toml and modify the line of proconio from:
+//!
+//! ```toml
+//! proconio = "=(version)"
+//! ```
+//!
+//! to:
+//!
+//! ```toml
+//! proconio = { version = "=(version)", features = ["derive"] }
+//! ```
+//!
+//! Example of `#[fastout]`:
 //!
 //! ```
 //! # #[cfg(feature = "derive")]
