@@ -5,6 +5,8 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be copied, modified, or
 // distributed except according to those terms.
 
+#![allow(clippy::needless_doctest_main, clippy::print_literal)]
+
 //! Easy IO library for competitive programming.
 //!
 //! `proconio` provides an easy way to read values from stdin (or other source).  The main is

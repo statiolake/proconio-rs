@@ -6,6 +6,7 @@
 // distributed except according to those terms.
 
 #![recursion_limit = "128"]
+#![allow(clippy::needless_doctest_main)]
 
 //! Macros to easily derive `Readable` and make stdout faster.
 //!
