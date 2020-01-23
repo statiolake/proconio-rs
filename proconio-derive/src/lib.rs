@@ -98,6 +98,24 @@ pub fn derive_readable(attr: TokenStream, input: TokenStream) -> TokenStream {
 /// internally captured into the closure.  This causes a trait bound mismatch when used with
 /// function requiring its argument closure to be a `Send`, such as `std::thread::spawn()`.
 ///
+/// ```compile_fail
+/// use proconio::fastout;
+///
+/// use std::thread;
+///
+/// #[fastout]
+/// fn main() {
+///    thread::Builder::new()
+///        .stack_size(32 * 1024 * 1024)
+///        .spawn(|| {
+///            println!("Hi!");
+///        })
+///        .unwrap()
+///        .join()
+///        .unwrap();
+/// }
+/// ```
+///
 /// It is too conservative to make all of such closures compilation error because it is actually no
 /// problem to use such a closure only inside a single thread.  However, since trait bound check is
 /// done after macro expansions, there is no way to check whther the closure is required to be a
