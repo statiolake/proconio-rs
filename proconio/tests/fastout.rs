@@ -13,6 +13,7 @@ fn foo() -> i32 {
     3
 }
 
+#[allow(clippy::print_literal)]
 #[fastout]
 fn main() {
     let clo = || "AtCoder"; // OK;
@@ -25,5 +26,5 @@ fn main() {
     std::println!("{}", foo());
     print!("{}{}, ", 'h', "ello"); // "hello"       (no newline)
     println!("{}!", "world"); // "world!\n"
-    println!("{}", 123456789); // "123456789\n"
+    println!("{}", 123_456_789); // "123456789\n"
 }

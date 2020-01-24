@@ -5,6 +5,8 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be copied, modified, or
 // distributed except according to those terms.
 
+#![allow(clippy::needless_doctest_main, clippy::print_literal)]
+
 //! Easy IO library for competitive programming.
 //!
 //! `proconio` provides an easy way to read values from stdin (or other source).  The main is
@@ -557,8 +559,8 @@ macro_rules! input {
         }
     };
 
-    // parse variable identifier
-    (@from [$source:expr] @mut [$($mut:tt)?] @rest $var:ident: $($rest:tt)*) => {
+    // parse variable pattern
+    (@from [$source:expr] @mut [$($mut:tt)?] @rest $var:tt: $($rest:tt)*) => {
         $crate::input! {
             @from [$source]
             @mut [$($mut)*]
@@ -569,14 +571,14 @@ macro_rules! input {
     };
 
     // parse kind (type)
-    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:ident @kind [$($kind:tt)*] @rest) => {
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @kind [$($kind:tt)*] @rest) => {
         let $($mut)* $var = $crate::read_value!(@source [$source] @kind [$($kind)*]);
     };
-    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:ident @kind [$($kind:tt)*] @rest, $($rest:tt)*) => {
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @kind [$($kind:tt)*] @rest, $($rest:tt)*) => {
         $crate::input!(@from [$source] @mut [$($mut)*] @var $var @kind [$($kind)*] @rest);
         $crate::input!(@from [$source] @rest $($rest)*);
     };
-    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:ident @kind [$($kind:tt)*] @rest $tt:tt $($rest:tt)*) => {
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @kind [$($kind:tt)*] @rest $tt:tt $($rest:tt)*) => {
         $crate::input!(@from [$source] @mut [$($mut)*] @var $var @kind [$($kind)* $tt] @rest $($rest)*);
     };
 
@@ -852,5 +854,20 @@ mod tests {
         assert_eq!(vla, [0, 1, 2]);
         assert_eq!(tuple, (3, 4, vec!['a', 'b']));
         assert_eq!(unit, (3,));
+    }
+
+    #[test]
+    fn input_single_tt_pattern() {
+        let mut source = AutoSource::from("3 42 0\n1 2 3\n");
+        input! {
+            from &mut source,
+            (n, mut k): (usize, usize),
+            _: usize,
+            xs: [u32; n],
+        }
+        k += 1;
+        assert_eq!(n, 3);
+        assert_eq!(k, 43);
+        assert_eq!(xs, [1, 2, 3]);
     }
 }

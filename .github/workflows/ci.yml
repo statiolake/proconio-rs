@@ -1,0 +1,132 @@
+name: CI
+
+on:
+  schedule:
+    - cron: 0 0 1 * *
+  push:
+  pull_request:
+
+jobs:
+  rustfmt:
+    name: Rustfmt
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable-x86_64-unknown-linux-gnu
+          default: true
+          profile: default
+
+      - name: '`cargo fmt --all -- --check`'
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        channel:
+          - 1.40.0
+          - stable
+          - beta
+        target_triple:
+          - x86_64-pc-windows-msvc
+          - x86_64-pc-windows-gnu
+          - x86_64-apple-darwin
+          - x86_64-unknown-linux-gnu
+          - x86_64-unknown-linux-musl
+        include:
+          - channel: 1.40.0
+            target_triple: x86_64-pc-windows-msvc
+            host_triple: x86_64-pc-windows-msvc
+            os: windows-latest
+          - channel: 1.40.0
+            target_triple: x86_64-pc-windows-gnu
+            host_triple: x86_64-pc-windows-gnu
+            os: windows-latest
+          - channel: 1.40.0
+            target_triple: x86_64-apple-darwin
+            host_triple: x86_64-apple-darwin
+            os: macOS-latest
+          - channel: 1.40.0
+            target_triple: x86_64-unknown-linux-gnu
+            host_triple: x86_64-unknown-linux-gnu
+            os: ubuntu-18.04
+          - channel: 1.40.0
+            target_triple: x86_64-unknown-linux-musl
+            host_triple: x86_64-unknown-linux-gnu
+            os: ubuntu-18.04
+          - channel: stable
+            target_triple: x86_64-pc-windows-msvc
+            host_triple: x86_64-pc-windows-msvc
+            os: windows-latest
+          - channel: stable
+            target_triple: x86_64-pc-windows-gnu
+            host_triple: x86_64-pc-windows-gnu
+            os: windows-latest
+          - channel: stable
+            target_triple: x86_64-apple-darwin
+            host_triple: x86_64-apple-darwin
+            os: macOS-latest
+          - channel: stable
+            target_triple: x86_64-unknown-linux-gnu
+            host_triple: x86_64-unknown-linux-gnu
+            os: ubuntu-18.04
+          - channel: stable
+            target_triple: x86_64-unknown-linux-musl
+            host_triple: x86_64-unknown-linux-gnu
+            os: ubuntu-18.04
+          - channel: beta
+            target_triple: x86_64-pc-windows-msvc
+            host_triple: x86_64-pc-windows-msvc
+            os: windows-latest
+          - channel: beta
+            target_triple: x86_64-pc-windows-gnu
+            host_triple: x86_64-pc-windows-gnu
+            os: windows-latest
+          - channel: beta
+            target_triple: x86_64-apple-darwin
+            host_triple: x86_64-apple-darwin
+            os: macOS-latest
+          - channel: beta
+            target_triple: x86_64-unknown-linux-gnu
+            host_triple: x86_64-unknown-linux-gnu
+            os: ubuntu-18.04
+          - channel: beta
+            target_triple: x86_64-unknown-linux-musl
+            host_triple: x86_64-unknown-linux-gnu
+            os: ubuntu-18.04
+
+    name: ${{ matrix.channel }}-${{ matrix.target_triple }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: '`sudo apt-get install musl-tools`'
+        run: sudo apt-get install musl-tools
+        if: matrix.target_triple == 'x86_64-unknown-linux-musl'
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.channel }}-${{ matrix.host_triple }}
+          target: ${{ matrix.target_triple }}
+          default: true
+          profile: default
+
+      - name: '`cargo clippy --workspace --all-targets --all-features --target ${{ matrix.target_triple }} -v -- -D warnings`'
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --workspace --all-targets --all-features --target ${{ matrix.target_triple }} -v -- -D warnings
+
+      - name: '`cargo test --no-fail-fast --workspace --target ${{ matrix.target_triple }} -v`'
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --no-fail-fast --workspace --target ${{ matrix.target_triple }} -v

@@ -6,6 +6,7 @@
 // distributed except according to those terms.
 
 #![recursion_limit = "128"]
+#![allow(clippy::needless_doctest_main)]
 
 //! Macros to easily derive `Readable` and make stdout faster.
 //!
@@ -96,6 +97,24 @@ pub fn derive_readable(attr: TokenStream, input: TokenStream) -> TokenStream {
 /// is because the closure cannot implement `Send` since `StdoutLock`, which is not a `Send`, is
 /// internally captured into the closure.  This causes a trait bound mismatch when used with
 /// function requiring its argument closure to be a `Send`, such as `std::thread::spawn()`.
+///
+/// ```compile_fail
+/// use proconio::fastout;
+///
+/// use std::thread;
+///
+/// #[fastout]
+/// fn main() {
+///    thread::Builder::new()
+///        .stack_size(32 * 1024 * 1024)
+///        .spawn(|| {
+///            println!("Hi!");
+///        })
+///        .unwrap()
+///        .join()
+///        .unwrap();
+/// }
+/// ```
 ///
 /// It is too conservative to make all of such closures compilation error because it is actually no
 /// problem to use such a closure only inside a single thread.  However, since trait bound check is
