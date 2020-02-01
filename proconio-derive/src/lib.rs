@@ -162,8 +162,12 @@ fn compile_error_at(args: TokenStream2, start: Span2, end: Span2) -> Stmt {
     r.push(set_span(Group::new(Delimiter::Parenthesis, group), end));
     r.push(set_span(Punct::new(';', Spacing::Alone), end));
 
-    syn::parse(r.into_iter().collect())
-        .expect("Failed to parse auto-generated compile_error! macro.  This is a bug.")
+    syn::parse(r.into_iter().collect()).expect(concat!(
+        "Failed to parse auto-generated compile_error! macro.  ",
+        "This is a bug in `proconio`.  ",
+        "Please report this issue from ",
+        "<https://github.com/statiolake/proconio-rs/issues>."
+    ))
 }
 
 fn set_span<T: Into<TokenTree>>(token: T, span: Span) -> TokenTree {
@@ -199,5 +203,10 @@ fn set_span_range<T: ToTokens + Parse>(tokens: T, start: Span, end: Span) -> T {
         token
     });
 
-    syn::parse(tokens.collect()).expect("Failed to parse respanned token stream.  This is a bug.")
+    syn::parse(tokens.collect()).expect(concat!(
+        "Failed to parse respanned token stream.  ",
+        "This is a bug in `proconio`.  ",
+        "Please report this issue from ",
+        "<https://github.com/statiolake/proconio-rs/issues>."
+    ))
 }

@@ -43,7 +43,7 @@ impl<R: BufRead> LineSource<R> {
             let num_bytes = self
                 .reader
                 .read_line(&mut line)
-                .expect("failed to get line");
+                .expect("failed to get linel maybe an IO error.");
 
             if num_bytes == 0 {
                 // reached EOF

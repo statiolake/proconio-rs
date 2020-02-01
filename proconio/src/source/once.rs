@@ -39,7 +39,7 @@ impl<R: BufRead> OnceSource<R> {
         let mut context = String::new();
         source
             .read_to_string(&mut context)
-            .expect("failed to read from stdin");
+            .expect("failed to read from source; maybe an IO error.");
 
         // Boxed str is no need to check to pin.
         let context = context.into_boxed_str();
