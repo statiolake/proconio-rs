@@ -17,9 +17,12 @@ use std::str::FromStr;
 impl<T: FromStr> Readable for T {
     type Output = T;
     fn read<R: BufRead, S: Source<R>>(source: &mut S) -> T {
+        // Using `match` instead of `expect()` is to prevent requiring `T::Err`
+        // to be a `Debug`.
+        #[allow(clippy::match_wild_err_arm)]
         match source.next_token_unwrap().parse() {
             Ok(v) => v,
-            Err(_e) => panic!("failed to parse input."),
+            Err(_) => panic!("failed to parse input."),
         }
     }
 }
