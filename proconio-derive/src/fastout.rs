@@ -153,7 +153,7 @@ fn replace_print_macro_in_expr(expr: &mut Expr) -> Vec<Span2> {
                             \n\
                             note: If you want to run your entire logic in a thread having extended \
                             size of stack, you can define a new function instead.  See \
-                            documentation (https://docs.rs/proconio/0.3.1/proconio/#\
+                            documentation (https://docs.rs/proconio/#\
                             closures-having-print-or-println-in-fastout-function) for more \
                             details.\n\
                             \n\
