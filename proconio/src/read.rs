@@ -11,15 +11,31 @@
 
 use crate::marker::{Bytes, Chars, Isize1, Usize1};
 use crate::source::{Readable, Source};
+use std::any::type_name;
+use std::fmt::Debug;
 use std::io::BufRead;
 use std::str::FromStr;
 
-impl<T: FromStr> Readable for T {
+impl<T: FromStr> Readable for T
+where
+    T::Err: Debug,
+{
     type Output = T;
     fn read<R: BufRead, S: Source<R>>(source: &mut S) -> T {
-        match source.next_token_unwrap().parse() {
+        let token = source.next_token_unwrap();
+        match token.parse() {
             Ok(v) => v,
-            Err(_e) => panic!("failed to parse input."),
+            Err(e) => panic!(
+                concat!(
+                    "failed to parse the input `{input}` ",
+                    "to the value of type `{ty}`: {err:?}; ",
+                    "ensure that the input format is collectly specified ",
+                    "and that the input value must handle specified type.",
+                ),
+                input = token,
+                ty = type_name::<T>(),
+                err = e,
+            ),
         }
     }
 }

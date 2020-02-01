@@ -870,4 +870,14 @@ mod tests {
         assert_eq!(k, 43);
         assert_eq!(xs, [1, 2, 3]);
     }
+
+    #[test]
+    #[should_panic]
+    fn input_err_different_type() {
+        let mut source = AutoSource::from("3.2\n");
+        input! {
+            from &mut source,
+            _n: i32,
+        }
+    }
 }
