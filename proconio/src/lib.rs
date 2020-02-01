@@ -880,4 +880,14 @@ mod tests {
             _n: i32,
         }
     }
+
+    #[test]
+    #[should_panic]
+    fn input_err_different_format() {
+        let mut source = AutoSource::from("");
+        input! {
+            from &mut source,
+            _n: i32,
+        }
+    }
 }
