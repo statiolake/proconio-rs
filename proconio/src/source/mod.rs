@@ -78,7 +78,12 @@ pub trait Source<R: BufRead> {
 
     /// Force gets a whitespace-splitted next token.
     fn next_token_unwrap(&mut self) -> &str {
-        self.next_token().expect("failed to get token")
+        self.next_token().expect(concat!(
+            "failed to get the next token; ",
+            "maybe reader reached an end of input. ",
+            "ensure that arguments for `input!` macro is correctly ",
+            "specified to match the problem input."
+        ))
     }
 }
 

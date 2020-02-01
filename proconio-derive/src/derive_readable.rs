@@ -19,7 +19,12 @@ pub fn main(attr: TokenStream, input: TokenStream) -> TokenStream {
         let mut attr = attr.into_iter();
         let start = attr
             .next()
-            .expect("Attribute is empty.  This is a bug.")
+            .expect(concat!(
+                "Attribute is empty.  ",
+                "This is a bug in `proconio`.  ",
+                "Please report this issue from ",
+                "<https://github.com/statiolake/proconio-rs/issues>."
+            ))
             .span();
         let end = attr.fold(start, |_, item| item.span());
         let compile_error = crate::compile_error_at(
@@ -147,7 +152,12 @@ fn field_named(fields: &Fields) -> Vec<FieldInfo> {
 
     for field in fields {
         let ident = field.ident.as_ref().cloned();
-        let ident = ident.expect("Named field doesn't have name.  This is a bug.");
+        let ident = ident.expect(concat!(
+            "Named field doesn't have name.  ",
+            "This is a bug in `proconio`.  ",
+            "Please report this issue from ",
+            "<https://github.com/statiolake/proconio-rs/issues>."
+        ));
         let ty = field.ty.clone();
         let read = quote! {
             let #ident = <#ty as ::proconio::source::Readable>::read(source);

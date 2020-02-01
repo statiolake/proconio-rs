@@ -258,9 +258,12 @@ fn replace_print_macro_in_expr(expr: &mut Expr) -> Vec<Span2> {
 
     let emac = replace(
         emac,
-        parse_quote!(compile_error!(
-            "Replacing print macro did not complete.  This is a bug."
-        )),
+        parse_quote!(compile_error!(concat!(
+            "Replacing print macro did not complete.  ",
+            "This is a bug in `proconio`.  ",
+            "Please report this issue from ",
+            "<https://github.com/statiolake/proconio-rs/issues>."
+        ))),
     );
 
     let (did_replace, replaced) = generate_print_replaced_expr(emac);
@@ -273,7 +276,12 @@ fn generate_print_replaced_expr(emac: ExprMacro) -> (Vec<Span2>, Expr) {
     macro_rules! path {
         ($($tt:tt)*) => {
             syn::parse::<Path>(quote!($($tt)*).into())
-                .expect("Failed to parse path.  This is a bug.")
+                .expect(concat!(
+                    "Failed to parse path.  ",
+                    "This is a bug in `proconio`.  ",
+                    "Please report this issue from ",
+                    "<https://github.com/statiolake/proconio-rs/issues>."
+                ))
         };
     }
 

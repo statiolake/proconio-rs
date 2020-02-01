@@ -591,7 +591,12 @@ macro_rules! input {
         }
     };
     ($($rest:tt)*) => {
-        let mut locked_stdin = $crate::STDIN_SOURCE.lock().expect("failed to lock the stdin");
+        let mut locked_stdin = $crate::STDIN_SOURCE.lock().expect(concat!(
+            "failed to lock the stdin; please re-run this program.  ",
+            "If this issue repeatedly occur, this is a bug in `proconio`.  ",
+            "Please report this issue from ",
+            "<https://github.com/statiolake/proconio-rs/issues>."
+        ));
         $crate::input! {
             @from [&mut *locked_stdin]
             @rest $($rest)*
@@ -645,7 +650,7 @@ macro_rules! read_value {
 
     // unreachable
     (@source [$source:expr] @kind []) => {
-        compile_error!("Reached unreachable statement while parsing macro input.  This is a bug.");
+        compile_error!(concat!("Reached unreachable statement while parsing macro input.  ", "This is a bug in `proconio`.  ", "Please report this issue from ", "<https://github.com/statiolake/proconio-rs/issues>."));
     };
 
     // normal other
@@ -670,7 +675,12 @@ macro_rules! read_value {
 /// ```
 pub fn is_stdin_empty() -> bool {
     use crate::source::Source;
-    let mut lock = STDIN_SOURCE.lock().expect("failed to lock stdin");
+    let mut lock = STDIN_SOURCE.lock().expect(concat!(
+        "failed to lock the stdin; please re-run this program.  ",
+        "If this issue repeatedly occur, this is a bug in `proconio`.  ",
+        "Please report this issue from ",
+        "<https://github.com/statiolake/proconio-rs/issues>."
+    ));
     lock.is_empty()
 }
 
@@ -869,5 +879,25 @@ mod tests {
         assert_eq!(n, 3);
         assert_eq!(k, 43);
         assert_eq!(xs, [1, 2, 3]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn input_err_different_type() {
+        let mut source = AutoSource::from("3.2\n");
+        input! {
+            from &mut source,
+            _n: i32,
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn input_err_different_format() {
+        let mut source = AutoSource::from("");
+        input! {
+            from &mut source,
+            _n: i32,
+        }
     }
 }
