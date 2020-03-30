@@ -12,11 +12,11 @@ description = "Procedural macros for proconio"
 proc-macro = true
 
 [dependencies]
-quote = "0.6.12"
-proc-macro2 = "0.4.30"
+quote = "1.0.3"
+proc-macro2 = "1.0.9"
 
 [dependencies.syn]
-version = "0.15.34"
+version = "1.0.17"
 features = ["full", "extra-traits"]
 
 [dev-dependencies.proconio]

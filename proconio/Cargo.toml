@@ -23,7 +23,7 @@ path = "tests/fastout.rs"
 required-features = ["derive"]
 
 [dependencies]
-lazy_static = "1.3.0"
+lazy_static = "1.4.0"
 
 [dependencies.proconio-derive]
 version = "0.1.0"
