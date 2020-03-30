@@ -22,8 +22,9 @@ fn main() {
     // std::thread::spawn(|| {
     //     std::println!("hello");
     // }); // of course error
+    println!();
     println!("hello, world, {}!", name);
-    std::println!("{}", foo());
+    println!("{}", foo());
     print!("{}{}, ", 'h', "ello"); // "hello"       (no newline)
     println!("{}!", "world"); // "world!\n"
     println!("{}", 123_456_789); // "123456789\n"
