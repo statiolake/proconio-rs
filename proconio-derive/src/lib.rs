@@ -128,14 +128,38 @@ pub fn derive_readable(attr: TokenStream, input: TokenStream) -> TokenStream {
 /// ```
 /// let __proconio_stdout = ::std::io::stdout();
 /// let mut __proconio_stdout = ::std::io::BufWriter::new(__proconio_stdout.lock());
+///
+/// #[allow(unused_macros)]
+/// macro_rules! print {
+///     ($($tt:tt)*) => {
+///         <::std::io::BufWriter<::std::io::StdoutLock<'_>> as ::std::io::Write>::write_fmt(
+///             &mut __proconio_stdout,
+///             format_args!($($tt)*),
+///         )
+///         .unwrap()
+///     };
+/// }
+///
+/// #[allow(unused_macros)]
+/// macro_rules! println {
+///     () => {
+///         <::std::io::BufWriter<::std::io::StdoutLock<'_>> as ::std::io::Write>::write_all(
+///             &mut __proconio_stdout,
+///             b"\n",
+///         )
+///         .unwrap()
+///     };
+///     ($fmt:literal $($tt:tt)*) => {
+///         <::std::io::BufWriter<::std::io::StdoutLock<'_>> as ::std::io::Write>::write_fmt(
+///             &mut __proconio_stdout,
+///             format_args!(::std::concat!($fmt, "\n") $($tt)*),
+///         )
+///         .unwrap()
+///     };
+/// }
+///
 /// let __proconio_res = {
-///     // Your code goes here, with `print!` replaced by
-///     //
-///     // <::std::io::BufWriter<::std::io::StdoutLock> as ::std::io::Write>::write_fmt(
-///     //     &mut __proconio_stdout,
-///     //     format_args!(/* print! macro arguments */)
-///     // ).unwrap()
-///     //
+///     // Your code goes here
 /// };
 /// <::std::io::BufWriter<::std::io::StdoutLock> as ::std::io::Write>::flush(
 ///     &mut __proconio_stdout
