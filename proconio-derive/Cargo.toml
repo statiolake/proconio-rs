@@ -20,5 +20,5 @@ version = "1.0.17"
 features = ["full", "extra-traits", "visit"]
 
 [dev-dependencies.proconio]
-version = "0.3.0"
+version = "0.4.0"
 path = "../proconio"
