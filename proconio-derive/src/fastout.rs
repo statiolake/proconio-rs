@@ -123,31 +123,18 @@ fn insert_new_print_macros(block: &Block) -> Block {
 
         #[allow(unused_macros)]
         macro_rules! print {
-            ($($tt:tt)*) => {
-                <::std::io::BufWriter<::std::io::StdoutLock<'_>> as ::std::io::Write>::write_fmt(
-                    &mut __proconio_stdout,
-                    format_args!($($tt)*),
-                )
-                .unwrap()
-            };
+            ($($tt:tt)*) => {{
+                use std::io::Write as _;
+                ::std::write!(__proconio_stdout, $($tt)*).unwrap();
+            }};
         }
 
         #[allow(unused_macros)]
         macro_rules! println {
-            () => {
-                <::std::io::BufWriter<::std::io::StdoutLock<'_>> as ::std::io::Write>::write_all(
-                    &mut __proconio_stdout,
-                    b"\n",
-                )
-                .unwrap()
-            };
-            ($fmt:literal $($tt:tt)*) => {
-                <::std::io::BufWriter<::std::io::StdoutLock<'_>> as ::std::io::Write>::write_fmt(
-                    &mut __proconio_stdout,
-                    format_args!(::std::concat!($fmt, "\n") $($tt)*),
-                )
-                .unwrap()
-            };
+            ($($tt:tt)*) => {{
+                use std::io::Write as _;
+                ::std::writeln!(__proconio_stdout, $($tt)*).unwrap();
+            }};
         }
 
         let __proconio_res = #block;
