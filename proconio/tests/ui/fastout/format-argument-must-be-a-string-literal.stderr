@@ -1,0 +1,21 @@
+error: format argument must be a string literal
+ --> $DIR/format-argument-must-be-a-string-literal.rs:5:14
+  |
+5 |     println!(42);
+  |              ^^
+  |
+help: you might be missing a string literal to format with
+  |
+5 |     println!("{}", 42);
+  |              ^^^^^
+
+error: format argument must be a string literal
+ --> $DIR/format-argument-must-be-a-string-literal.rs:8:14
+  |
+8 |     println!(x);
+  |              ^
+  |
+help: you might be missing a string literal to format with
+  |
+8 |     println!("{}", x);
+  |              ^^^^^

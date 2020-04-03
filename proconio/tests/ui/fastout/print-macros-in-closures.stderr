@@ -1,0 +1,9 @@
+error: Closures in a #[fastout] function cannot contain `print!` or `println!` macro
+
+note: If you want to run your entire logic in a thread having extended size of stack, you can define a new function instead.  See documentation (https://docs.rs/proconio/#closures-having-print-or-println-in-fastout-function) for more details.
+
+note: This is because if you use this closure with `std::thread::spawn()` or any other functions requiring `Send` for an argument closure, the compiler emits an error about thread unsafety for our internal implementations.  If you are using the closure just in a single thread, it's actually no problem, but we cannot check the trait bounds at the macro-expansion time.  So for now, all closures having `print!` or `println!` is prohibited regardless of the `Send` requirements.
+ --> $DIR/print-macros-in-closures.rs:5:16
+  |
+5 |     let _ = || println!("Hi");
+  |                ^^^^^^^
