@@ -125,8 +125,8 @@ jobs:
           command: clippy
           args: --workspace --all-targets --all-features --target ${{ matrix.target_triple }} -v -- -D warnings
 
-      - name: '`cargo test --no-fail-fast --workspace --target ${{ matrix.target_triple }} -v`'
+      - name: '`cargo test --no-fail-fast --workspace --all-features --target ${{ matrix.target_triple }} -v`'
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --no-fail-fast --workspace --target ${{ matrix.target_triple }} -v
+          args: --no-fail-fast --workspace --all-features --target ${{ matrix.target_triple }} -v

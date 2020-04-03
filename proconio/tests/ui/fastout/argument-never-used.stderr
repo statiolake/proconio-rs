@@ -1,0 +1,7 @@
+error: argument never used
+ --> $DIR/argument-never-used.rs:5:18
+  |
+5 |     println!("", 42);
+  |              --  ^^ argument never used
+  |              |
+  |              formatting specifier missing

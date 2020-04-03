@@ -22,6 +22,11 @@ name = "fastout"
 path = "tests/fastout.rs"
 required-features = ["derive"]
 
+[[test]]
+name = "ui"
+path = "tests/ui.rs"
+required-features = ["derive"]
+
 [dependencies]
 lazy_static = "1.4.0"
 
@@ -29,6 +34,10 @@ lazy_static = "1.4.0"
 version = "0.2.0"
 path = "../proconio-derive"
 optional = true
+
+[dev-dependencies]
+rustversion = "1.0.2"
+trybuild = "1.0.24"
 
 [features]
 derive = ["proconio-derive"]
