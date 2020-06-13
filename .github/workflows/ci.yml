@@ -20,7 +20,7 @@ jobs:
           default: true
           profile: default
 
-      - name: '`cargo fmt --all -- --check`'
+      - name: "`cargo fmt --all -- --check`"
         uses: actions-rs/cargo@v1
         with:
           command: fmt
@@ -108,7 +108,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: '`sudo apt-get install musl-tools`'
+      - name: "`sudo apt-get install musl-tools`"
         run: sudo apt-get install musl-tools
         if: matrix.target_triple == 'x86_64-unknown-linux-musl'
 
@@ -119,13 +119,13 @@ jobs:
           default: true
           profile: default
 
-      - name: '`cargo clippy --workspace --all-targets --all-features --target ${{ matrix.target_triple }} -v -- -D warnings`'
+      - name: "`cargo clippy --workspace --all-targets --all-features --target ${{ matrix.target_triple }} -v -- -D warnings`"
         uses: actions-rs/cargo@v1
         with:
           command: clippy
           args: --workspace --all-targets --all-features --target ${{ matrix.target_triple }} -v -- -D warnings
 
-      - name: '`cargo test --no-fail-fast --workspace --all-features --target ${{ matrix.target_triple }} -v`'
+      - name: "`cargo test --no-fail-fast --workspace --all-features --target ${{ matrix.target_triple }} -v`"
         uses: actions-rs/cargo@v1
         with:
           command: test
