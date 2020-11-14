@@ -13,6 +13,11 @@ description = "Easy IO library for competitive programming"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [[test]]
+name = "stdin"
+path = "tests/stdin.rs"
+harness = false
+
+[[test]]
 name = "derive"
 path = "tests/derive.rs"
 required-features = ["derive"]
