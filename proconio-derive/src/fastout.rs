@@ -127,7 +127,14 @@ fn replace_print_macro_in_expr(expr: &mut Expr) -> Vec<Span2> {
             return did_replace;
         }
         Expr::Loop(i) => return replace_print_macro_in_block(&mut i.body),
-        Expr::Match(i) => return rbox!(i.expr),
+        Expr::Match(i) => {
+            let mut did_replace = rbox!(i.expr);
+            for arm in &mut i.arms {
+                did_replace.extend(arm.guard.iter_mut().flat_map(|(_, expr)| rbox!(expr)));
+                did_replace.extend(rbox!(arm.body));
+            }
+            return did_replace;
+        }
         Expr::Closure(i) => {
             let did_replace = rbox!(i.body);
 
@@ -153,7 +160,7 @@ fn replace_print_macro_in_expr(expr: &mut Expr) -> Vec<Span2> {
                             \n\
                             note: If you want to run your entire logic in a thread having extended \
                             size of stack, you can define a new function instead.  See \
-                            documentation (https://docs.rs/proconio/0.3.1/proconio/#\
+                            documentation (https://docs.rs/proconio/#\
                             closures-having-print-or-println-in-fastout-function) for more \
                             details.\n\
                             \n\
@@ -344,5 +351,5 @@ fn insert_bufwriter_to_block(block: &mut Block) {
         return __proconio_res;
     }};
 
-    replace(block, replaced);
+    *block = replaced;
 }
