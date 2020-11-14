@@ -4,18 +4,9 @@ use proconio::fastout;
 
 #[fastout]
 fn test_issue_14() {
-    for i in 0..2 {
-        if i % 2 == 0 {
-            println!("-1");
-            continue;
-        }
-
-        let success = 0;
-        match success {
-            _ => {
-                println!("1");
-            }
-        }
+    println!("-1");
+    match 0 {
+        _ => println!("1"),
     }
 }
 
