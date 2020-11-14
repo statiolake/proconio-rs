@@ -344,5 +344,5 @@ fn insert_bufwriter_to_block(block: &mut Block) {
         return __proconio_res;
     }};
 
-    replace(block, replaced);
+    *block = replaced;
 }
