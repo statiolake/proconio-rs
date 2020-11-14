@@ -3,6 +3,7 @@
 use proconio::fastout;
 
 #[fastout]
+#[allow(clippy::match_single_binding)]
 fn test_issue_14() {
     println!("-1");
     match 0 {
