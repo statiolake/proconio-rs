@@ -1,0 +1,8 @@
+error: Match arms in #[fastout] function cannot contain `print!` or `println!` macro
+
+note: This is because the version of proconio-derive used in the AtCoder's judge server (v0.1.6) has a bug around here. This code may not work as expected in the judge server. Sorry for inconvenience.
+For more details, see issues #8 and #14 in the repo: <https://github.com/statiolake/proconio-rs/issues/8> and <https://github.com/statiolake/proconio-rs/issues/14>.
+ --> $DIR/issue_14.rs:7:14
+  |
+7 |         _ => println!("1"),
+  |              ^^^^^^^

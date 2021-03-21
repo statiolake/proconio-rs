@@ -128,12 +128,49 @@ fn replace_print_macro_in_expr(expr: &mut Expr) -> Vec<Span2> {
         }
         Expr::Loop(i) => return replace_print_macro_in_block(&mut i.body),
         Expr::Match(i) => {
-            let mut did_replace = rbox!(i.expr);
+            // NOTE: The version of proconio installed in the AtCoder's judge server incorrectly
+            // ignores the match arm's println! (see issue #8 and #14). In order to notify the user
+            // of this bug, we emit a compile error instead of "fixing" behavior in proconio-derive
+            // v0.1 series (v0.2 behaves collectly).
+            let expr_did_replace = rbox!(i.expr);
+
+            let mut did_replace = Vec::new();
             for arm in &mut i.arms {
                 did_replace.extend(arm.guard.iter_mut().flat_map(|(_, expr)| rbox!(expr)));
                 did_replace.extend(rbox!(arm.body));
             }
-            return did_replace;
+
+            // Forbid println! used in match arms
+            if !did_replace.is_empty() {
+                let mut stmts: Vec<Stmt> = Vec::new();
+                for span in did_replace {
+                    let compile_error = crate::compile_error_at(
+                        quote!(
+                            "Match arms in #[fastout] function cannot contain `print!` or \
+                            `println!` macro\n\
+                            \n\
+                            note: This is because the version of proconio-derive used in \
+                            the AtCoder's judge server (v0.1.6) has a bug around here. \
+                            This code may not work as expected in the judge server. \
+                            Sorry for inconvenience.\n\
+                            For more details, see issues #8 and #14 in the repo: \
+                            <https://github.com/statiolake/proconio-rs/issues/8> \
+                            and \
+                            <https://github.com/statiolake/proconio-rs/issues/14>."
+                        ),
+                        span,
+                        span,
+                    );
+
+                    stmts.push(compile_error);
+                }
+
+                *expr = parse_quote!({ #(#stmts)* });
+            }
+
+            // All found println! in match arms are replaced to compile_error!. Only println! in
+            // match expr is relevant.
+            return expr_did_replace;
         }
         Expr::Closure(i) => {
             let did_replace = rbox!(i.body);

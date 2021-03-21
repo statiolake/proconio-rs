@@ -28,9 +28,8 @@ path = "tests/fastout.rs"
 required-features = ["derive"]
 
 [[test]]
-name = "issue_14"
-path = "tests/issue_14.rs"
-harness = false
+name = "test_compile_issue_14"
+path = "tests/test_compile_issue_14.rs"
 required-features = ["derive"]
 
 [dependencies]
@@ -44,6 +43,7 @@ optional = true
 [dev-dependencies]
 assert_cli = "0.6.3"
 rustversion = "1.0"
+trybuild = "1.0"
 
 [features]
 derive = ["proconio-derive"]
