@@ -3,7 +3,7 @@
 use proconio::fastout;
 
 #[fastout]
-#[allow(clippy::unknown_clippy_lints, clippy::match_single_binding)]
+#[rustversion::attr(since(1.43), allow(clippy::match_single_binding))]
 fn test_issue_14() {
     println!("-1");
     match 0 {
