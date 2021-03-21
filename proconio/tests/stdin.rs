@@ -7,25 +7,49 @@
 
 use proconio::{input, is_stdin_empty};
 
-#[test]
-#[ignore]
-fn stdin() {
+fn test_stdin() {
     assert!(!is_stdin_empty());
     input! {
         n: usize,
     }
     assert!(!is_stdin_empty());
-    eprintln!("{}", n);
+    println!("{}", n);
 
     for c in 0..n {
-        eprintln!("start {}", c);
+        println!("start {}", c);
         assert!(!is_stdin_empty());
         input! {
             i: isize,
             j: isize,
         }
 
-        eprintln!("{} {}", i, j);
+        println!("{} {}", i, j);
     }
     assert!(is_stdin_empty());
+}
+
+fn test_for(input: &str, expected_stdout: &str) {
+    use assert_cli::Assert;
+    use std::env::args;
+    Assert::command(&[&*args().next().unwrap(), "foo"])
+        .stdin(input)
+        .stdout()
+        .is(expected_stdout)
+        .and()
+        .stderr()
+        .is("")
+        .unwrap();
+}
+
+fn main() {
+    use std::env::args;
+    if args().len() == 1 {
+        test_for(
+            "3\n1 2\n3 4\n5 6\n",
+            "3\nstart 0\n1 2\nstart 1\n3 4\nstart 2\n5 6\n",
+        );
+        return;
+    }
+
+    test_stdin();
 }
