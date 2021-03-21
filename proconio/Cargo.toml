@@ -43,6 +43,7 @@ optional = true
 
 [dev-dependencies]
 assert_cli = "0.6.3"
+rustversion = "1.0"
 
 [features]
 derive = ["proconio-derive"]
