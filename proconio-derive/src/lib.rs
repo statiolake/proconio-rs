@@ -156,11 +156,12 @@ fn compile_error_at(args: TokenStream2, start: Span2, end: Span2) -> Stmt {
         .map(|x| set_span(x, Span::call_site()))
         .collect();
 
-    let mut r = Vec::<TokenTree>::new();
-    r.push(set_span(Ident::new("compile_error", start), start));
-    r.push(set_span(Punct::new('!', Spacing::Alone), start));
-    r.push(set_span(Group::new(Delimiter::Parenthesis, group), end));
-    r.push(set_span(Punct::new(';', Spacing::Alone), end));
+    let r = vec![
+        set_span(Ident::new("compile_error", start), start),
+        set_span(Punct::new('!', Spacing::Alone), start),
+        set_span(Group::new(Delimiter::Parenthesis, group), end),
+        set_span(Punct::new(';', Spacing::Alone), end),
+    ];
 
     syn::parse(r.into_iter().collect()).expect(concat!(
         "Failed to parse auto-generated compile_error! macro.  ",
