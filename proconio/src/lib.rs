@@ -519,6 +519,10 @@ use std::io;
 use std::io::{BufReader, Stdin};
 use std::sync::Mutex;
 
+// Prepares a short path to `Readable` to enables rust-analyzer to infer `Readable::Output`.
+#[doc(hidden)]
+pub use crate::source::Readable as __Readable;
+
 lazy_static! {
     #[doc(hidden)]
     pub static ref STDIN_SOURCE: Mutex<AutoSource<BufReader<Stdin>>> =
@@ -613,7 +617,7 @@ macro_rules! read_value {
         $crate::read_value!(@array @source [$source] @kind [] @rest $($kind)*)
     };
     (@array @source [$source:expr] @kind [$($kind:tt)*] @rest) => {{
-        let len = <usize as $crate::source::Readable>::read($source);
+        let len = <usize as $crate::__Readable>::read($source);
         $crate::read_value!(@source [$source] @kind [[$($kind)*; len]])
     }};
     (@array @source [$source:expr] @kind [$($kind:tt)*] @rest ; $($rest:tt)*) => {
@@ -655,7 +659,7 @@ macro_rules! read_value {
 
     // normal other
     (@source [$source:expr] @kind [$kind:ty]) => {
-        <$kind as $crate::source::Readable>::read($source)
+        <$kind as $crate::__Readable>::read($source)
     }
 }
 
