@@ -57,13 +57,27 @@ impl Readable for Bytes {
 impl Readable for Usize1 {
     type Output = usize;
     fn read<R: BufRead, S: Source<R>>(source: &mut S) -> usize {
-        usize::read(source) - 1
+        // panic if the subtraction overflows
+        usize::read(source)
+            .checked_sub(1)
+            .expect("attempted to read the value 0 as a Usize1")
     }
 }
 
 impl Readable for Isize1 {
     type Output = isize;
     fn read<R: BufRead, S: Source<R>>(source: &mut S) -> isize {
-        isize::read(source) - 1
+        // FIXME: Which is appropriate, forbidding all negative values or only isize::MIN. For now
+        // we disallow only isize::MIN.
+        // ensure the value is more than isize::MIN, or subtract overflows.
+        isize::read(source).checked_sub(1).unwrap_or_else(|| {
+            panic!(
+                concat!(
+                    "attempted to read the value {} as a Isize1:",
+                    " the value is isize::MIN and cannot be decremented"
+                ),
+                std::isize::MIN,
+            )
+        })
     }
 }
