@@ -510,7 +510,6 @@
 pub use proconio_derive::*;
 
 pub mod marker;
-pub mod read;
 pub mod source;
 
 use crate::source::auto::AutoSource;

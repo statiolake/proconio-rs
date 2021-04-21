@@ -52,7 +52,10 @@
 //! `LineSource` behaves samely in point of the read result, but, unintentionally, it may differ in
 //! a bare possibility. If it should differ, you can manually specify `LineSource` as `source` of
 //! `input!`.
+use std::any::type_name;
+use std::fmt::Debug;
 use std::io::BufRead;
+use std::str::FromStr;
 
 pub mod line;
 pub mod once;
@@ -107,4 +110,29 @@ impl<R: BufRead, S: Source<R>> Source<R> for &'_ mut S {
 pub trait Readable {
     type Output;
     fn read<R: BufRead, S: Source<R>>(source: &mut S) -> Self::Output;
+}
+
+// implementations of Readable for any `FromStr` types including primitives.
+impl<T: FromStr> Readable for T
+where
+    T::Err: Debug,
+{
+    type Output = T;
+    fn read<R: BufRead, S: Source<R>>(source: &mut S) -> T {
+        let token = source.next_token_unwrap();
+        match token.parse() {
+            Ok(v) => v,
+            Err(e) => panic!(
+                concat!(
+                    "failed to parse the input `{input}` ",
+                    "to the value of type `{ty}`: {err:?}; ",
+                    "ensure that the input format is collectly specified ",
+                    "and that the input value must handle specified type.",
+                ),
+                input = token,
+                ty = type_name::<T>(),
+                err = e,
+            ),
+        }
+    }
 }
