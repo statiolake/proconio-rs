@@ -510,7 +510,6 @@
 pub use proconio_derive::*;
 
 pub mod marker;
-pub mod read;
 pub mod source;
 
 use crate::source::auto::AutoSource;
@@ -831,6 +830,29 @@ mod tests {
 
             assert_eq!(from, i * 2);
             assert_eq!(to, i * 2 + 1);
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn input_zero_as_usize1() {
+        use crate::marker::Usize1;
+        let mut source = AutoSource::from("0");
+        input! {
+            from &mut source,
+            _v: Usize1,
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn input_min_as_isize1() {
+        use crate::marker::Isize1;
+        let min_string = std::isize::MIN.to_string();
+        let mut source = AutoSource::from(&*min_string);
+        input! {
+            from &mut source,
+            _v: Isize1,
         }
     }
 
