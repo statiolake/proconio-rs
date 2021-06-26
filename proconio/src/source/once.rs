@@ -76,7 +76,7 @@ impl<R: BufRead> Source<R> for OnceSource<R> {
 
 use std::io::BufReader;
 
-/// You can create `LineSource` from `&str`.  Since `&[u8]` is a `Read`, `BufRead` can be easily
+/// You can create `OnceSource` from `&str`.  Since `&[u8]` is a `Read`, `BufRead` can be easily
 /// created by wrapping using `BufReader`.
 impl<'a> From<&'a str> for OnceSource<BufReader<&'a [u8]>> {
     fn from(s: &'a str) -> OnceSource<BufReader<&'a [u8]>> {
