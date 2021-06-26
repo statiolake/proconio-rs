@@ -78,8 +78,8 @@ fn derive_readable_impl(ast: &DeriveInput) -> Result<TokenStream2, TokenStream> 
     let name = get_name(ast);
     let fields = &get_data(ast)?.fields;
 
-    let field_info = field_info(&fields);
-    let generate = generate(&fields, &name, &field_info);
+    let field_info = field_info(fields);
+    let generate = generate(fields, &name, &field_info);
     let reads = field_info.iter().map(|f| &f.read);
 
     let res = quote! {
