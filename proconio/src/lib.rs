@@ -512,7 +512,7 @@ pub use proconio_derive::*;
 pub mod marker;
 pub mod source;
 
-use crate::source::auto::AutoSource;
+use crate::source::{auto::AutoSource, line::LineSource};
 use lazy_static::lazy_static;
 use std::io;
 use std::io::{BufReader, Stdin};
@@ -526,6 +526,12 @@ lazy_static! {
     #[doc(hidden)]
     pub static ref STDIN_SOURCE: Mutex<AutoSource<BufReader<Stdin>>> =
         Mutex::new(AutoSource::new(BufReader::new(io::stdin())));
+}
+
+lazy_static! {
+    #[doc(hidden)]
+    pub static ref INTERACTIVE_STDIN_SOURCE: Mutex<AutoSource<BufReader<Stdin>>> =
+        Mutex::new(LineSource::new(BufReader::new(io::stdin())));
 }
 
 /// read input from stdin.
@@ -603,6 +609,35 @@ macro_rules! input {
         $crate::input! {
             @from [&mut *locked_stdin]
             @rest $($rest)*
+        }
+        drop(locked_stdin); // release the lock
+    };
+}
+
+/// read input from stdin interactively.
+///
+/// this macro is alias of:
+/// ```text
+/// let source = procontio::source::line::LineSource::new(BufReader::new(std::io::stdin()))
+/// input! {
+///     from &mut source,
+///     (mut) variable: type,
+///     ...
+/// }
+/// ```
+/// read the documet of [input!](input) for further information.
+#[macro_export]
+macro_rules! input_interactive {
+    ($($rest:tt)*) => {
+        let mut locked_stdin = $crate::INTERACTIVE_STDIN_SOURCE.lock().expect(concat!(
+            "failed to lock the stdin; please re-run this program.  ",
+            "If this issue repeatedly occur, this is a bug in `proconio`.  ",
+            "Please report this issue from ",
+            "<https://github.com/statiolake/proconio-rs/issues>."
+        ));
+        $crate::input! {
+            from &mut *locked_stdin,
+            $($rest)*
         }
         drop(locked_stdin); // release the lock
     };
