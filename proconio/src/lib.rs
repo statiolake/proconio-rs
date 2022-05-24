@@ -722,6 +722,17 @@ pub fn is_stdin_empty() -> bool {
     lock.is_empty()
 }
 
+pub fn is_stdin_empty_interactive() -> bool {
+    use crate::source::Source;
+    let mut lock = INTERACTIVE_STDIN_SOURCE.lock().expect(concat!(
+        "failed to lock the stdin; please re-run this program.  ",
+        "If this issue repeatedly occur, this is a bug in `proconio`.  ",
+        "Please report this issue from ",
+        "<https://github.com/statiolake/proconio-rs/issues>."
+    ));
+    lock.is_empty()
+}
+
 #[cfg(test)]
 mod tests {
     use crate::source::auto::AutoSource;

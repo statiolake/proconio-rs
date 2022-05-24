@@ -18,6 +18,11 @@ path = "tests/stdin.rs"
 harness = false
 
 [[test]]
+name = "interactive"
+path = "tests/interactive.rs"
+harness = false
+
+[[test]]
 name = "derive"
 path = "tests/derive.rs"
 required-features = ["derive"]

@@ -5,27 +5,27 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be copied, modified, or
 // distributed except according to those terms.
 
-use proconio::{input_interactive as input, is_stdin_empty};
+use proconio::{input_interactive, is_stdin_empty_interactive};
 
 fn test_stdin() {
-    assert!(!is_stdin_empty());
-    input! {
+    assert!(!is_stdin_empty_interactive());
+    input_interactive! {
         n: usize,
     }
-    assert!(!is_stdin_empty());
+    assert!(!is_stdin_empty_interactive());
     println!("{}", n);
 
     for c in 0..n {
         println!("start {}", c);
-        assert!(!is_stdin_empty());
-        input! {
+        assert!(!is_stdin_empty_interactive());
+        input_interactive! {
             i: isize,
             j: isize,
         }
 
         println!("{} {}", i, j);
     }
-    assert!(is_stdin_empty());
+    assert!(is_stdin_empty_interactive());
 }
 
 fn test_for(input: &str, expected_stdout: &str) {
