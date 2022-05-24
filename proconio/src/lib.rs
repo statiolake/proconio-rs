@@ -530,7 +530,7 @@ lazy_static! {
 
 lazy_static! {
     #[doc(hidden)]
-    pub static ref INTERACTIVE_STDIN_SOURCE: Mutex<AutoSource<BufReader<Stdin>>> =
+    pub static ref INTERACTIVE_STDIN_SOURCE: Mutex<LineSource<BufReader<Stdin>>> =
         Mutex::new(LineSource::new(BufReader::new(io::stdin())));
 }
 
