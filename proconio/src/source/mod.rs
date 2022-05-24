@@ -77,6 +77,7 @@ pub trait Source<R: BufRead> {
     fn next_token(&mut self) -> Option<&str>;
 
     /// Check if tokens are empty
+    #[allow(clippy::wrong_self_convention)]
     fn is_empty(&mut self) -> bool;
 
     /// Force gets a whitespace-splitted next token.
