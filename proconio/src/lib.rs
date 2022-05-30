@@ -525,9 +525,9 @@ use std::{
 pub use crate::source::Readable as __Readable;
 
 pub enum StdinSource<R: BufRead> {
-    Normal(AutoSource<R>), // for input!
+    Normal(AutoSource<R>),      // for input!
     Interactive(LineSource<R>), // for for input_interactive!
-    Unknown(LineSource<R>), // for is_stdin_empty() without input! or input_interactive!
+    Unknown(LineSource<R>),     // for is_stdin_empty() without input! or input_interactive!
 }
 
 impl<R: BufRead> source::Source<R> for StdinSource<R> {
@@ -545,7 +545,6 @@ impl<R: BufRead> source::Source<R> for StdinSource<R> {
             StdinSource::Interactive(source) => source.is_empty(),
             StdinSource::Unknown(source) => source.is_empty(),
         }
-
     }
 }
 
