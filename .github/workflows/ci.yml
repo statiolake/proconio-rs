@@ -9,7 +9,7 @@ on:
 jobs:
   rustfmt:
     name: Rustfmt
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v2
@@ -56,11 +56,11 @@ jobs:
           - channel: 1.42.0
             target_triple: x86_64-unknown-linux-gnu
             host_triple: x86_64-unknown-linux-gnu
-            os: ubuntu-18.04
+            os: ubuntu-20.04
           - channel: 1.42.0
             target_triple: x86_64-unknown-linux-musl
             host_triple: x86_64-unknown-linux-gnu
-            os: ubuntu-18.04
+            os: ubuntu-20.04
           - channel: stable
             target_triple: x86_64-pc-windows-msvc
             host_triple: x86_64-pc-windows-msvc
@@ -76,11 +76,11 @@ jobs:
           - channel: stable
             target_triple: x86_64-unknown-linux-gnu
             host_triple: x86_64-unknown-linux-gnu
-            os: ubuntu-18.04
+            os: ubuntu-20.04
           - channel: stable
             target_triple: x86_64-unknown-linux-musl
             host_triple: x86_64-unknown-linux-gnu
-            os: ubuntu-18.04
+            os: ubuntu-20.04
           - channel: beta
             target_triple: x86_64-pc-windows-msvc
             host_triple: x86_64-pc-windows-msvc
@@ -96,11 +96,11 @@ jobs:
           - channel: beta
             target_triple: x86_64-unknown-linux-gnu
             host_triple: x86_64-unknown-linux-gnu
-            os: ubuntu-18.04
+            os: ubuntu-20.04
           - channel: beta
             target_triple: x86_64-unknown-linux-musl
             host_triple: x86_64-unknown-linux-gnu
-            os: ubuntu-18.04
+            os: ubuntu-20.04
 
     name: ${{ matrix.channel }}-${{ matrix.target_triple }}
     runs-on: ${{ matrix.os }}
