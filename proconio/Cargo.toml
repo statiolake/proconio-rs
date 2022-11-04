@@ -54,7 +54,7 @@ optional = true
 
 [dev-dependencies]
 rustversion = "1.0.2"
-trybuild = "1.0.24"
+trybuild = "=1.0.67"
 assert_cli = "0.6.3"
 
 [features]
