@@ -44,7 +44,8 @@ required-features = ["derive"]
 harness = false
 
 [dependencies]
-once_cell = "1.12.0"
+# 1.15.0 uses Rust 2021 edition; does not compile on Rust 1.42.
+once_cell = "=1.14.0"
 
 [dependencies.proconio-derive]
 version = "0.2.0"
