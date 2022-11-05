@@ -506,6 +506,9 @@
 //! If you don't like this behavior, you can remove #[fastout] from your `main()`.
 //!
 
+/// Module to emit warnings in unsupported environments.
+mod warning;
+
 #[cfg(feature = "derive")]
 pub use proconio_derive::*;
 
