@@ -503,8 +503,61 @@
 //! world
 //! ```
 //!
-//! If you don't like this behavior, you can remove #[fastout] from your `main()`.
+//! If you don't like this behavior, you can remove `#[fastout]` from your `main()`.
 //!
+//! # AtCoder compatibility warning
+//!
+//! You may see the following warning during compiling your program:
+//!
+//! ```console
+//! warning: use of deprecated constant `warning::_::WARN`: this version of proconio is not compatible
+//!          please use the v0.3.x version instead if you use this in the AtCoder 2020 update.
+//!          note: for uses outside of AtCoder, you can disable this warning via the `disable_compat_warning` feature.
+//!  --> proconio/src/warning.rs:6:6
+//!   |
+//! 6 |     (WARN, "please use proconio v0.3.x in AtCoder 2020");
+//!   |      ^^^^
+//!   |
+//!   = note: `#[warn(deprecated)]` on by default
+//! ```
+//!
+//! This is because the version you are using (v0.4.x) is not compatible with AtCoder 2020:
+//!
+//! - Some new features are added, so you may get Compile Error (CE) while your local test
+//!   successfully compiles.
+//! - Some bug fixes not compatible with v0.3.x are included, so you may encounter the unexpected
+//!   Runtime Error (RE) on server while your local test successfully passes.
+//!   One of the serious bugs is issue [#8](https://github.com/statiolake/proconio-rs/issues/8) or
+//!   [#14](https://github.com/statiolake/proconio-rs/issues/14).
+//!
+//! In order to avoid wasting time during contest to solve such a hard-to-notice problems, we
+//! strongly recommend that you use v0.3.x versions for AtCoder 2020 in your local environment too.
+//! The latest v0.3.x is almost same with the version used in the AtCoder, but guards to some bugs
+//! are added. For example, code that may cause above bug
+//! [#8](https://github.com/statiolake/proconio-rs/issues/8) in server is compile-time error in the
+//! latest v0.3.x version. We will add such warnings when we find another bug.
+//!
+//! ## Disable warning
+//!
+//! If you are not intended to use proconio with AtCoder 2020, you may disable the warning by
+//! enabling feature `disable_compat_warning`. Features can be enabled by modifying dependency
+//! section in Cargo.toml of your project to:
+//!
+//! ```toml
+//! [dependencies.proconio]
+//! version = "0.4"
+//! features = ["disable_compat_warning"] # Add this
+//! ```
+//!
+//! or
+//!
+//! ```toml
+//! [dependencies]
+//! proconio = { version = "0.4", features = ["disable_compat_warning"] }
+//! ```
+
+/// Module to emit warnings in unsupported environments.
+mod warning;
 
 #[cfg(feature = "derive")]
 pub use proconio_derive::*;
