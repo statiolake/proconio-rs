@@ -6,23 +6,15 @@
 // distributed except according to those terms.
 
 use super::Source;
+use crate::source::tokens::Tokens;
 use std::io::BufRead;
-use std::iter::Peekable;
-use std::str::SplitWhitespace;
 
 /// Source reading stream line by line.
 ///
 /// It is a wrapper for `BufRead`.  You can create `LineSource` from any type implementing
 /// `BufRead`.
 pub struct LineSource<R: BufRead> {
-    // FIXME: This is actually not 'static but it is treated as 'static for the
-    // same reason with crate::source::once::Source.  Also there is no way to
-    // separate context and tokens since they are private field, this is safe.
-    tokens: Peekable<SplitWhitespace<'static>>,
-
-    // context `tokens` reffering to
-    current_context: Box<str>,
-
+    tokens: Tokens,
     reader: R,
 }
 
@@ -31,14 +23,13 @@ impl<R: BufRead> LineSource<R> {
     pub fn new(reader: R) -> LineSource<R> {
         // dummy values.
         LineSource {
-            current_context: "".to_string().into_boxed_str(),
-            tokens: "".split_whitespace().peekable(),
+            tokens: "".to_owned().into(),
             reader,
         }
     }
 
     fn prepare(&mut self) {
-        while self.tokens.peek().is_none() {
+        while self.tokens.is_empty() {
             let mut line = String::new();
             let num_bytes = self
                 .reader
@@ -50,10 +41,7 @@ impl<R: BufRead> LineSource<R> {
                 return;
             }
 
-            self.current_context = line.into_boxed_str();
-            self.tokens = unsafe { std::mem::transmute::<_, &'static str>(&*self.current_context) }
-                .split_whitespace()
-                .peekable();
+            self.tokens = line.into();
         }
     }
 }
@@ -63,13 +51,13 @@ impl<R: BufRead> Source<R> for LineSource<R> {
     fn next_token(&mut self) -> Option<&str> {
         // while tokens are empty, reads a new line.
         self.prepare();
-        self.tokens.next()
+        self.tokens.next_token()
     }
 
     /// Check if tokens are empty
     fn is_empty(&mut self) -> bool {
         self.prepare();
-        self.tokens.peek().is_none()
+        self.tokens.is_empty()
     }
 }
 
