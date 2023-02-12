@@ -3,6 +3,7 @@ name = "proconio"
 version = "0.4.3"
 authors = ["statiolake <statiolake@gmail.com>"]
 edition = "2018"
+rust-version = "1.67.1"
 repository = "https://github.com/statiolake/proconio-rs"
 keywords = ["io", "procon", "procon"]
 categories = ["command-line-interface"]
