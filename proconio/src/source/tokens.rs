@@ -38,7 +38,8 @@ impl From<String> for Tokens {
 
 // # Safety
 //
-// FIXME: really safe?
+// - `current_context` is not accessed directly until dropped.
+// - `Box<str>: Send`.
 unsafe impl Send for Tokens {}
 
 struct CurrentContext(NonNull<str>);
