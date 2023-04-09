@@ -42,6 +42,12 @@ impl From<String> for Tokens {
 // - `Box<str>: Send`.
 unsafe impl Send for Tokens {}
 
+// # Safety
+//
+// - `current_context` is not accessed directly until dropped.
+// - `Box<str>: Sync`.
+unsafe impl Sync for Tokens {}
+
 struct CurrentContext(NonNull<str>);
 
 impl From<String> for CurrentContext {
