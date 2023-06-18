@@ -59,6 +59,7 @@ use std::str::FromStr;
 
 pub mod line;
 pub mod once;
+mod tokens;
 
 pub mod auto {
     //! Defines `AutoSource`.
