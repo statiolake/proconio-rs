@@ -513,8 +513,8 @@ pub mod marker;
 pub mod source;
 
 use crate::source::{auto::AutoSource, line::LineSource};
-use once_cell::sync::OnceCell;
 use std::io::{BufReader, Stdin};
+use std::sync::OnceLock;
 use std::{
     io::{self, BufRead},
     sync::Mutex,
@@ -549,7 +549,7 @@ impl<R: BufRead> source::Source<R> for StdinSource<R> {
 }
 
 #[doc(hidden)]
-pub static STDIN_SOURCE: OnceCell<Mutex<StdinSource<BufReader<Stdin>>>> = OnceCell::new();
+pub static STDIN_SOURCE: OnceLock<Mutex<StdinSource<BufReader<Stdin>>>> = OnceLock::new();
 
 /// read input from stdin.
 ///
