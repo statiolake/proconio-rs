@@ -64,6 +64,6 @@ impl Drop for CurrentContext {
         // # Safety
         //
         // The pointee should be no longer refferred.
-        unsafe { Box::from_raw(self.0.as_mut()) };
+        unsafe { drop(Box::from_raw(self.0.as_mut())) };
     }
 }
