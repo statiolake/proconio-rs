@@ -1001,7 +1001,9 @@ mod tests {
         impl<T: crate::source::Readable, const N: usize> crate::source::Readable for Array<T, N> {
             type Output = [T::Output; N];
 
-            fn read<R: std::io::BufRead, S: crate::source::Source<R>>(source: &mut S) -> Self::Output {
+            fn read<R: std::io::BufRead, S: crate::source::Source<R>>(
+                source: &mut S,
+            ) -> Self::Output {
                 std::array::from_fn(|_| T::read(source))
             }
         }
