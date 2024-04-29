@@ -596,7 +596,18 @@ macro_rules! input {
         }
     };
 
-    // parse kind (type)
+    // parse `with` (the marker of RuntimeReadable type)
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @kind [] @rest with $($rest:tt)*) => {
+        $crate::input! {
+            @from [$source]
+            @mut [$($mut)*]
+            @var $var
+            @dyn_kind []
+            @rest $($rest)*
+        }
+    };
+
+    // parse kind (Readable type)
     (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @kind [$($kind:tt)*] @rest) => {
         let $($mut)* $var = $crate::read_value!(@source [$source] @kind [$($kind)*]);
     };
@@ -617,6 +628,30 @@ macro_rules! input {
         $crate::input!(@from [$source] @mut [$($mut)*] @var $var @kind [$ty] @rest);
     };
 
+    // parse runtime kind (RuntimeReadable type)
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @dyn_kind [$($dyn_kind:tt)*] @rest) => {
+        let $($mut)* $var = $crate::read_value!(@source [$source] @dyn_kind [$($dyn_kind)*]);
+    };
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @dyn_kind [$($dyn_kind:tt)*] @rest, $($rest:tt)*) => {
+        $crate::input!(@from [$source] @mut [$($mut)*] @var $var @dyn_kind [$($dyn_kind)*] @rest);
+        $crate::input!(@from [$source] @rest $($rest)*);
+    };
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @dyn_kind [$($dyn_kind:tt)*] @rest $dyn_readable:expr) => {
+        $crate::input!(@from [$source] @mut [$($mut)*] @var $var @dyn_kind [$($dyn_kind)* $dyn_readable] @rest);
+    };
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @dyn_kind [$($dyn_kind:tt)*] @rest $dyn_readable:expr, $($rest:tt)*) => {
+        $crate::input!(@from [$source] @mut [$($mut)*] @var $var @dyn_kind [$($dyn_kind)* $dyn_readable] @rest , $($rest)*);
+    };
+    (@from $($tt:tt)*) => {
+        compile_error!(concat!(
+            "Reached unreachable statement while parsing macro input.  ",
+            "This is a bug in `proconio`.  ",
+            "Please report this issue from ",
+            "<https://github.com/statiolake/proconio-rs/issues>."
+        ));
+    };
+
+    // interface
     (from $source:expr, $($rest:tt)*) => {
         #[allow(unused_variables, unused_mut)]
         let mut s = $source;
@@ -726,15 +761,25 @@ macro_rules! read_value {
         $crate::read_value!(@tuple @source [$source] @kinds [$($kinds)*] @current [$($curr)* $tt] @rest $($rest)*)
     };
 
-    // unreachable
-    (@source [$source:expr] @kind []) => {
-        compile_error!(concat!("Reached unreachable statement while parsing macro input.  ", "This is a bug in `proconio`.  ", "Please report this issue from ", "<https://github.com/statiolake/proconio-rs/issues>."));
-    };
-
     // normal other
     (@source [$source:expr] @kind [$kind:ty]) => {
         <$kind as $crate::__Readable>::read($source)
-    }
+    };
+
+    // runtime readable
+    (@source [$source:expr] @dyn_kind [$dyn_kind:expr]) => {
+        $crate::source::RuntimeReadable::read($dyn_kind, $source)
+    };
+
+    // unreachable
+    (@source [$source:expr] @kind []) => {
+        compile_error!(concat!(
+            "Reached unreachable statement while parsing macro input.  ",
+            "This is a bug in `proconio`.  ",
+            "Please report this issue from ",
+            "<https://github.com/statiolake/proconio-rs/issues>."
+        ));
+    };
 }
 
 /// Checks if some of tokens are left on stdin.
@@ -771,6 +816,8 @@ pub fn is_stdin_empty() -> bool {
 
 #[cfg(test)]
 mod tests {
+    use std::marker::PhantomData;
+
     use crate::source::auto::AutoSource;
 
     #[test]
@@ -1018,6 +1065,52 @@ mod tests {
 
         assert_eq!(a, [1, 2, 3, 4, 5]);
         assert_eq!(b, [6, 7, 8]);
+    }
+
+    #[test]
+    fn input_runtime_readable() {
+        // VecReadable<T> replicates the built-in Vec reader `input!(v: [T])` in user-land.
+        struct VecReadable<T> {
+            n: usize,
+            _marker: PhantomData<T>,
+        }
+
+        impl<T> VecReadable<T> {
+            pub fn new(n: usize) -> Self {
+                VecReadable {
+                    n,
+                    _marker: PhantomData,
+                }
+            }
+        }
+
+        impl<T: crate::source::Readable> crate::source::RuntimeReadable for VecReadable<T> {
+            type Output = Vec<T::Output>;
+
+            fn read<R: std::io::BufRead, S: crate::source::Source<R>>(
+                self,
+                source: &mut S,
+            ) -> Self::Output {
+                let mut res = vec![];
+                for _ in 0..self.n {
+                    input! {
+                        from &mut *source,
+                        v: T,
+                    }
+                    res.push(v);
+                }
+                res
+            }
+        }
+
+        let mut source = AutoSource::from("4 1 2 3 4");
+        input! {
+            from &mut source,
+            n: usize,
+            v: with VecReadable::<crate::marker::Usize1>::new(n),
+        }
+
+        assert_eq!(v, [0, 1, 2, 3]);
     }
 
     #[test]
