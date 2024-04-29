@@ -596,7 +596,7 @@ macro_rules! input {
         }
     };
 
-    // parse `with` (the marker of DynamicReadable type)
+    // parse `with` (the marker of RuntimeReadable type)
     (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @kind [] @rest with $($rest:tt)*) => {
         $crate::input! {
             @from [$source]
@@ -628,7 +628,7 @@ macro_rules! input {
         $crate::input!(@from [$source] @mut [$($mut)*] @var $var @kind [$ty] @rest);
     };
 
-    // parse dynamic kind (DynamicReadable type)
+    // parse runtime kind (RuntimeReadable type)
     (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @dyn_kind [$($dyn_kind:tt)*] @rest) => {
         let $($mut)* $var = $crate::read_value!(@source [$source] @dyn_kind [$($dyn_kind)*]);
     };
@@ -766,9 +766,9 @@ macro_rules! read_value {
         <$kind as $crate::__Readable>::read($source)
     };
 
-    // dynamic readable
+    // runtime readable
     (@source [$source:expr] @dyn_kind [$dyn_kind:expr]) => {
-        $crate::source::DynamicReadable::read($dyn_kind, $source)
+        $crate::source::RuntimeReadable::read($dyn_kind, $source)
     };
 
     // unreachable
@@ -1068,7 +1068,7 @@ mod tests {
     }
 
     #[test]
-    fn input_dynamic_readable() {
+    fn input_runtime_readable() {
         // VecReadable<T> replicates the built-in Vec reader `input!(v: [T])` in user-land.
         struct VecReadable<T> {
             n: usize,
@@ -1084,7 +1084,7 @@ mod tests {
             }
         }
 
-        impl<T: crate::source::Readable> crate::source::DynamicReadable for VecReadable<T> {
+        impl<T: crate::source::Readable> crate::source::RuntimeReadable for VecReadable<T> {
             type Output = Vec<T::Output>;
 
             fn read<R: std::io::BufRead, S: crate::source::Source<R>>(
