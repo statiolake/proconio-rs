@@ -18,7 +18,6 @@ fn test_stdin() {
 fn test_for(input: &str, expected_stdout: &str) {
     use assert_cli::Assert;
     use std::env::args;
-    println!("{:?}", args().next().unwrap());
     Assert::command(&[&*args().next().unwrap(), "foo"])
         .stdin(input)
         .stdout()
