@@ -604,8 +604,17 @@ macro_rules! input {
         $crate::input!(@from [$source] @mut [$($mut)*] @var $var @kind [$($kind)*] @rest);
         $crate::input!(@from [$source] @rest $($rest)*);
     };
-    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @kind [$($kind:tt)*] @rest $tt:tt $($rest:tt)*) => {
-        $crate::input!(@from [$source] @mut [$($mut)*] @var $var @kind [$($kind)* $tt] @rest $($rest)*);
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @kind [] @rest [$($tt:tt)*] $($rest:tt)*) => {
+        $crate::input!(@from [$source] @mut [$($mut)*] @var $var @kind [[$($tt)*]] @rest $($rest)*);
+    };
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @kind [] @rest ($($tt:tt)*) $($rest:tt)*) => {
+        $crate::input!(@from [$source] @mut [$($mut)*] @var $var @kind [($($tt)*)] @rest $($rest)*);
+    };
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @kind [] @rest $ty:ty, $($rest:tt)*) => {
+        $crate::input!(@from [$source] @mut [$($mut)*] @var $var @kind [$ty] @rest, $($rest)*);
+    };
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @kind [] @rest $ty:ty) => {
+        $crate::input!(@from [$source] @mut [$($mut)*] @var $var @kind [$ty] @rest);
     };
 
     (from $source:expr, $($rest:tt)*) => {
@@ -978,6 +987,37 @@ mod tests {
         assert_eq!(n, 3);
         assert_eq!(k, 43);
         assert_eq!(xs, [1, 2, 3]);
+    }
+
+    #[test]
+    fn input_generic() {
+        enum Array<T, const N: usize> {
+            _Phantom(
+                std::convert::Infallible,
+                std::marker::PhantomData<fn() -> T>,
+            ),
+        }
+
+        impl<T: crate::source::Readable, const N: usize> crate::source::Readable for Array<T, N> {
+            type Output = [T::Output; N];
+
+            fn read<R: std::io::BufRead, S: crate::source::Source<R>>(
+                source: &mut S,
+            ) -> Self::Output {
+                std::array::from_fn(|_| T::read(source))
+            }
+        }
+
+        let source = AutoSource::from("1 2 3 4 5 6 7 8");
+
+        input! {
+            from source,
+            a: Array<i32, 5>,
+            b: Array<i32, 3>,
+        }
+
+        assert_eq!(a, [1, 2, 3, 4, 5]);
+        assert_eq!(b, [6, 7, 8]);
     }
 
     #[test]
