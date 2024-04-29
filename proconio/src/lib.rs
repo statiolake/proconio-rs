@@ -596,7 +596,18 @@ macro_rules! input {
         }
     };
 
-    // parse kind (type)
+    // parse `with` (the marker of DynamicReadable type)
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @kind [] @rest with $($rest:tt)*) => {
+        $crate::input! {
+            @from [$source]
+            @mut [$($mut)*]
+            @var $var
+            @dyn_kind []
+            @rest $($rest)*
+        }
+    };
+
+    // parse kind (Readable type)
     (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @kind [$($kind:tt)*] @rest) => {
         let $($mut)* $var = $crate::read_value!(@source [$source] @kind [$($kind)*]);
     };
@@ -617,6 +628,30 @@ macro_rules! input {
         $crate::input!(@from [$source] @mut [$($mut)*] @var $var @kind [$ty] @rest);
     };
 
+    // parse dynamic kind (DynamicReadable type)
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @dyn_kind [$($dyn_kind:tt)*] @rest) => {
+        let $($mut)* $var = $crate::read_value!(@source [$source] @dyn_kind [$($dyn_kind)*]);
+    };
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @dyn_kind [$($dyn_kind:tt)*] @rest, $($rest:tt)*) => {
+        $crate::input!(@from [$source] @mut [$($mut)*] @var $var @dyn_kind [$($dyn_kind)*] @rest);
+        $crate::input!(@from [$source] @rest $($rest)*);
+    };
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @dyn_kind [$($dyn_kind:tt)*] @rest $dyn_readable:expr) => {
+        $crate::input!(@from [$source] @mut [$($mut)*] @var $var @dyn_kind [$($dyn_kind)* $dyn_readable] @rest);
+    };
+    (@from [$source:expr] @mut [$($mut:tt)?] @var $var:tt @dyn_kind [$($dyn_kind:tt)*] @rest $dyn_readable:expr, $($rest:tt)*) => {
+        $crate::input!(@from [$source] @mut [$($mut)*] @var $var @dyn_kind [$($dyn_kind)* $dyn_readable] @rest , $($rest)*);
+    };
+    (@from $($tt:tt)*) => {
+        compile_error!(concat!(
+            "Reached unreachable statement while parsing macro input.  ",
+            "This is a bug in `proconio`.  ",
+            "Please report this issue from ",
+            "<https://github.com/statiolake/proconio-rs/issues>."
+        ));
+    };
+
+    // interface
     (from $source:expr, $($rest:tt)*) => {
         #[allow(unused_variables, unused_mut)]
         let mut s = $source;
@@ -726,15 +761,25 @@ macro_rules! read_value {
         $crate::read_value!(@tuple @source [$source] @kinds [$($kinds)*] @current [$($curr)* $tt] @rest $($rest)*)
     };
 
-    // unreachable
-    (@source [$source:expr] @kind []) => {
-        compile_error!(concat!("Reached unreachable statement while parsing macro input.  ", "This is a bug in `proconio`.  ", "Please report this issue from ", "<https://github.com/statiolake/proconio-rs/issues>."));
-    };
-
     // normal other
     (@source [$source:expr] @kind [$kind:ty]) => {
         <$kind as $crate::__Readable>::read($source)
-    }
+    };
+
+    // dynamic readable
+    (@source [$source:expr] @dyn_kind [$dyn_kind:expr]) => {
+        $dyn_kind.read($source)
+    };
+
+    // unreachable
+    (@source [$source:expr] @kind []) => {
+        compile_error!(concat!(
+            "Reached unreachable statement while parsing macro input.  ",
+            "This is a bug in `proconio`.  ",
+            "Please report this issue from ",
+            "<https://github.com/statiolake/proconio-rs/issues>."
+        ));
+    };
 }
 
 /// Checks if some of tokens are left on stdin.

@@ -138,3 +138,48 @@ where
         }
     }
 }
+
+/// A trait representing which type can be read from `Source` dynamically.
+///
+/// You can define your own type which dynamically changes how to read the value, such as a directed
+/// graph that the number of nodes is given in the prior inputs.
+///
+/// ```
+/// # use proconio::source::DynamicReadable;
+/// # use proconio::source::auto::AutoSource;
+/// # use proconio::source::Source;
+/// # use proconio::input;
+/// # use proconio::marker::Usize1;
+/// # use std::io::BufRead;
+/// struct DirectedGraph(usize, usize);
+/// impl DynamicReadable for &DirectedGraph {
+///     type Output = Vec<Vec<usize>>;
+///
+///     fn read<R: BufRead, S: Source<R>>(self, source: &mut S) -> Self::Output {
+///         let DirectedGraph(n, m) = *self;
+///
+///         input! {
+///             from source,
+///             edges: [(Usize1, Usize1); m],
+///         };
+///
+///         let mut g = vec![vec![]; n];
+///         for e in edges {
+///             g[e.0].push(e.1);
+///         }
+///         g
+///     }
+/// }
+///
+/// # let mut source = AutoSource::from("2 3\n1 1\n1 2\n2 2\n");
+/// input! {
+/// #   from source,
+///     n: usize,
+///     m: usize,
+///     g: with DirectedGraph(n, m),
+/// }
+/// ```
+pub trait DynamicReadable {
+    type Output;
+    fn read<R: BufRead, S: Source<R>>(self, source: &mut S) -> Self::Output;
+}
