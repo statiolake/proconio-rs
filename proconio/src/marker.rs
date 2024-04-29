@@ -58,7 +58,7 @@ impl Readable for Isize1 {
                     "attempted to read the value {} as a Isize1:",
                     " the value is isize::MIN and cannot be decremented"
                 ),
-                std::isize::MIN,
+                isize::MIN,
             )
         })
     }
