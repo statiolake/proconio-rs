@@ -555,7 +555,6 @@ pub static STDIN_SOURCE: OnceLock<Mutex<StdinSource<BufReader<Stdin>>>> = OnceLo
 ///
 /// Basic syntax is:
 ///
-/// basic syntax is:
 /// ```text
 /// input! {
 ///     from source,          // optional: if you omitted, stdin is used by default.
@@ -564,7 +563,8 @@ pub static STDIN_SOURCE: OnceLock<Mutex<StdinSource<BufReader<Stdin>>>> = OnceLo
 ///     ...
 /// }
 /// ```
-/// the trailing comma is optional.  `source` can be anything implementing `Source`.  This macro
+///
+/// The trailing comma is optional.  `source` can be anything implementing `Source`.  This macro
 /// moves out the specified source.  If you want to prevent moving, you can use `&mut source` since
 /// `&mut S` where `S: Source` also implements `Source`.
 #[macro_export]
@@ -685,9 +685,10 @@ macro_rules! input {
     };
 }
 
-/// Read input from specified source interactively.
+/// Interactive version of input! macro.
 ///
-/// This macro is an alias of:
+/// This macro is effectively an alias of:
+///
 /// ```text
 /// let source = procontio::source::line::LineSource::new(BufReader::new(std::io::stdin()));
 /// input! {
@@ -696,7 +697,10 @@ macro_rules! input {
 ///     ...
 /// }
 /// ```
-/// read the document of [input!](input) for further information.
+///
+/// With this macro, you always read inputs line-by-line. You can use this as a drop-in replacement
+/// for input! macro in interactive problems. Other than that, usage are the same with input! macro.
+/// Read the document of [input!](input) for further information.
 #[macro_export]
 macro_rules! input_interactive {
     ($($rest:tt)*) => {
@@ -835,7 +839,9 @@ macro_rules! read_value {
 /// let variable = read_value!(from &mut source, type);
 /// ```
 ///
-/// Read the document of [read_value!](read_value) for further information.
+/// With this macro, you always read inputs line-by-line. You can use this as a drop-in replacement
+/// for read_value! macro in interactive problems. Other than that, usage are the same with
+/// read_value! macro. Read the document of [read_value!](read_value) for further information.
 #[macro_export]
 macro_rules! read_value_interactive {
     ($($rest:tt)*) => {
