@@ -19,6 +19,11 @@ path = "tests/stdin.rs"
 harness = false
 
 [[test]]
+name = "read_value"
+path = "tests/read_value.rs"
+harness = false
+
+[[test]]
 name = "interactive"
 path = "tests/interactive.rs"
 harness = false
