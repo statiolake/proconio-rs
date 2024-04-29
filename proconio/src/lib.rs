@@ -816,9 +816,9 @@ pub fn is_stdin_empty() -> bool {
 
 #[cfg(test)]
 mod tests {
-    use std::io::BufRead;
+    use std::marker::PhantomData;
 
-    use crate::source::{auto::AutoSource, DynamicReadable, Source};
+    use crate::source::auto::AutoSource;
 
     #[test]
     fn input_empty() {
@@ -1069,19 +1069,33 @@ mod tests {
 
     #[test]
     fn input_dynamic_readable() {
-        // This is emulation of what `input! { v: [usize] }` done by DynamicReadable.
-        struct VecReader(usize);
+        // VecReadable<T> replicates the built-in Vec reader `input!(v: [T])` in user-land.
+        struct VecReadable<T> {
+            n: usize,
+            _marker: PhantomData<T>,
+        }
 
-        impl DynamicReadable for VecReader {
-            type Output = Vec<usize>;
+        impl<T> VecReadable<T> {
+            pub fn new(n: usize) -> Self {
+                VecReadable {
+                    n,
+                    _marker: PhantomData,
+                }
+            }
+        }
 
-            fn read<R: BufRead, S: Source<R>>(self, source: &mut S) -> Self::Output {
-                let VecReader(n) = self;
+        impl<T: crate::source::Readable> crate::source::DynamicReadable for VecReadable<T> {
+            type Output = Vec<T::Output>;
+
+            fn read<R: std::io::BufRead, S: crate::source::Source<R>>(
+                self,
+                source: &mut S,
+            ) -> Self::Output {
                 let mut res = vec![];
-                for _ in 0..n {
+                for _ in 0..self.n {
                     input! {
                         from &mut *source,
-                        v: usize,
+                        v: T,
                     }
                     res.push(v);
                 }
@@ -1093,10 +1107,10 @@ mod tests {
         input! {
             from &mut source,
             n: usize,
-            v: with VecReader(n),
+            v: with VecReadable::<crate::marker::Usize1>::new(n),
         }
 
-        assert_eq!(v, [1, 2, 3, 4]);
+        assert_eq!(v, [0, 1, 2, 3]);
     }
 
     #[test]

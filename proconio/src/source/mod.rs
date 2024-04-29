@@ -152,11 +152,11 @@ where
 /// # use proconio::marker::Usize1;
 /// # use std::io::BufRead;
 /// struct DirectedGraph(usize, usize);
-/// impl DynamicReadable for &DirectedGraph {
+/// impl DynamicReadable for DirectedGraph {
 ///     type Output = Vec<Vec<usize>>;
 ///
 ///     fn read<R: BufRead, S: Source<R>>(self, source: &mut S) -> Self::Output {
-///         let DirectedGraph(n, m) = *self;
+///         let DirectedGraph(n, m) = self;
 ///
 ///         input! {
 ///             from source,
