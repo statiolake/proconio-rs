@@ -930,7 +930,7 @@ mod tests {
     #[should_panic]
     fn input_min_as_isize1() {
         use crate::marker::Isize1;
-        let min_string = std::isize::MIN.to_string();
+        let min_string = isize::MIN.to_string();
         let mut source = AutoSource::from(&*min_string);
         input! {
             from &mut source,
