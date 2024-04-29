@@ -816,7 +816,9 @@ pub fn is_stdin_empty() -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::source::auto::AutoSource;
+    use std::io::BufRead;
+
+    use crate::source::{auto::AutoSource, DynamicReadable, Source};
 
     #[test]
     fn input_empty() {
@@ -1063,6 +1065,38 @@ mod tests {
 
         assert_eq!(a, [1, 2, 3, 4, 5]);
         assert_eq!(b, [6, 7, 8]);
+    }
+
+    #[test]
+    fn input_dynamic_readable() {
+        // This is emulation of what `input! { v: [usize] }` done by DynamicReadable.
+        struct VecReader(usize);
+
+        impl DynamicReadable for VecReader {
+            type Output = Vec<usize>;
+
+            fn read<R: BufRead, S: Source<R>>(self, source: &mut S) -> Self::Output {
+                let VecReader(n) = self;
+                let mut res = vec![];
+                for _ in 0..n {
+                    input! {
+                        from &mut *source,
+                        v: usize,
+                    }
+                    res.push(v);
+                }
+                res
+            }
+        }
+
+        let mut source = AutoSource::from("4 1 2 3 4");
+        input! {
+            from &mut source,
+            n: usize,
+            v: with VecReader(n),
+        }
+
+        assert_eq!(v, [1, 2, 3, 4]);
     }
 
     #[test]
