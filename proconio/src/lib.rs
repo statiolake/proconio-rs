@@ -768,7 +768,7 @@ macro_rules! read_value {
 
     // dynamic readable
     (@source [$source:expr] @dyn_kind [$dyn_kind:expr]) => {
-        $dyn_kind.read($source)
+        $crate::source::DynamicReadable::read($dyn_kind, $source)
     };
 
     // unreachable
