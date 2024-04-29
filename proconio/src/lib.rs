@@ -551,13 +551,16 @@ impl<R: BufRead> source::Source<R> for StdinSource<R> {
 #[doc(hidden)]
 pub static STDIN_SOURCE: OnceLock<Mutex<StdinSource<BufReader<Stdin>>>> = OnceLock::new();
 
-/// read input from stdin.
+/// Read input and define variable from specified source.
+///
+/// Basic syntax is:
 ///
 /// basic syntax is:
 /// ```text
 /// input! {
 ///     from source,          // optional: if you omitted, stdin is used by default.
 ///     (mut) variable: type, // mut is optional: mut makes the variable mutable.
+///     (mut) variable: with runtime_readable, // RuntimeReadable version.
 ///     ...
 /// }
 /// ```
@@ -682,18 +685,18 @@ macro_rules! input {
     };
 }
 
-/// read input from stdin interactively.
+/// Read input from specified source interactively.
 ///
-/// this macro is alias of:
+/// This macro is an alias of:
 /// ```text
-/// let source = procontio::source::line::LineSource::new(BufReader::new(std::io::stdin()))
+/// let source = procontio::source::line::LineSource::new(BufReader::new(std::io::stdin()));
 /// input! {
 ///     from &mut source,
 ///     (mut) variable: type,
 ///     ...
 /// }
 /// ```
-/// read the documet of [input!](input) for further information.
+/// read the document of [input!](input) for further information.
 #[macro_export]
 macro_rules! input_interactive {
     ($($rest:tt)*) => {
@@ -718,7 +721,18 @@ macro_rules! input_interactive {
     };
 }
 
-#[doc(hidden)]
+/// Read input from specified source.
+/// Basic syntax is:
+///
+/// ```text
+/// let variable = read_value!(type);
+/// let variable = read_value!(with runtime_readable);
+/// // or
+/// let variable = read_value!(from source, type);
+/// let variable = read_value!(from source, with runtime_readable);
+/// ```
+///
+/// You can use any types that can be used with input! macro.
 #[macro_export]
 macro_rules! read_value {
     // array and variable length array
@@ -779,6 +793,68 @@ macro_rules! read_value {
             "Please report this issue from ",
             "<https://github.com/statiolake/proconio-rs/issues>."
         ));
+    };
+
+    // interface
+    (from $source:expr, with $($rest:tt)*) => {{
+        #[allow(unused_variables, unused_mut)]
+        let mut s = $source;
+        $crate::read_value!(@source [&mut s] @dyn_kind [$($rest)*])
+    }};
+    (from $source:expr, $($rest:tt)*) => {{
+        #[allow(unused_variables, unused_mut)]
+        let mut s = $source;
+        $crate::read_value!(@source [&mut s] @kind [$($rest)*])
+    }};
+    ($($rest:tt)*) => {{
+        let mut locked_stdin = $crate::STDIN_SOURCE
+            .get_or_init(|| {
+                std::sync::Mutex::new($crate::StdinSource::Normal(
+                    $crate::source::auto::AutoSource::new(std::io::BufReader::new(std::io::stdin())),
+                ))
+            })
+            .lock()
+            .expect(concat!(
+                "failed to lock the stdin; please re-run this program.  ",
+                "If this issue repeatedly occur, this is a bug in `proconio`.  ",
+                "Please report this issue from ",
+                "<https://github.com/statiolake/proconio-rs/issues>."
+            ));
+        let __res = $crate::read_value!(from &mut *locked_stdin, $($rest)*);
+        drop(locked_stdin); // release the lock
+        __res
+    }};
+}
+
+/// Interactive version of `read_value!` macro.
+///
+/// This macro is equivalent to do the following:
+///
+/// ```text
+/// let source = procontio::source::line::LineSource::new(BufReader::new(std::io::stdin()));
+/// let variable = read_value!(from &mut source, type);
+/// ```
+///
+/// Read the document of [read_value!](read_value) for further information.
+#[macro_export]
+macro_rules! read_value_interactive {
+    ($($rest:tt)*) => {
+        let mut locked_stdin = $crate::STDIN_SOURCE
+            .get_or_init(|| {
+                std::sync::Mutex::new($crate::StdinSource::Interactive(
+                    $crate::source::line::LineSource::new(std::io::BufReader::new(std::io::stdin())),
+                ))
+            })
+            .lock()
+            .expect(concat!(
+                "failed to lock the stdin; please re-run this program.  ",
+                "If this issue repeatedly occur, this is a bug in `proconio`.  ",
+                "Please report this issue from ",
+                "<https://github.com/statiolake/proconio-rs/issues>."
+            ));
+        let __res = $crate::read_value!(from &mut *locked_stdin, $($rest)*);
+        drop(locked_stdin); // release the lock
+        __res
     };
 }
 
@@ -845,6 +921,15 @@ mod tests {
     }
 
     #[test]
+    fn read_value_number() {
+        let mut source = AutoSource::from("    32   54 -23\r\r\n\nfalse");
+
+        assert_eq!(read_value!(from &mut source, u8), 32);
+        assert_eq!(read_value!(from &mut source, u32), 54);
+        assert_eq!(read_value!(from &mut source, i32), -23);
+    }
+
+    #[test]
     fn input_str() {
         use crate::marker::{Bytes, Chars};
         let source = AutoSource::from("  string   chars\nbytes");
@@ -862,6 +947,19 @@ mod tests {
     }
 
     #[test]
+    fn read_value_str() {
+        use crate::marker::{Bytes, Chars};
+        let mut source = AutoSource::from("  string   chars\nbytes");
+
+        assert_eq!(read_value!(from &mut source, String), "string");
+        assert_eq!(
+            read_value!(from &mut source, Chars),
+            ['c', 'h', 'a', 'r', 's']
+        );
+        assert_eq!(read_value!(from &mut source, Bytes), b"bytes");
+    }
+
+    #[test]
     fn input_array() {
         let source = AutoSource::from("5 3 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
 
@@ -872,6 +970,19 @@ mod tests {
             a: [i32; n],
             b: [[i32; n]; m] // no trailing comma is OK
         }
+
+        assert_eq!(a, [1, 2, 3, 4, 5]);
+        assert_eq!(b, [[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]]);
+    }
+
+    #[test]
+    fn read_value_array() {
+        let mut source = AutoSource::from("5 3 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
+
+        let n = read_value!(from &mut source, usize);
+        let m = read_value!(from &mut source, usize);
+        let a = read_value!(from &mut source, [i32; n]);
+        let b = read_value!(from &mut source, [[i32; n]; m]);
 
         assert_eq!(a, [1, 2, 3, 4, 5]);
         assert_eq!(b, [[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]]);
@@ -900,14 +1011,30 @@ mod tests {
     }
 
     #[test]
-    fn input_tuple() {
-        let source = AutoSource::from("4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
+    fn read_value_vla() {
+        let mut source = AutoSource::from("5 3 1 2 3 2 1 2 4 1 2 3 4 0 6 1 2 3 4 5 6");
 
-        input! {
-            from source,
-            n: usize,
-            t: [(i32, i32, i32, i32, i32); n],
-        }
+        let n = read_value!(from &mut source, usize);
+        let a = read_value!(from &mut source, [[i32]; n]);
+
+        assert_eq!(
+            a,
+            vec![
+                vec![1, 2, 3],
+                vec![1, 2],
+                vec![1, 2, 3, 4],
+                vec![],
+                vec![1, 2, 3, 4, 5, 6],
+            ]
+        );
+    }
+
+    #[test]
+    fn input_tuple() {
+        let mut source = AutoSource::from("4 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5 1 2 3 4 5");
+
+        let n = read_value!(from &mut source, usize);
+        let t = read_value!(from &mut source, [(i32, i32, i32, i32, i32); n]);
 
         assert_eq!(
             t,
@@ -1068,6 +1195,34 @@ mod tests {
     }
 
     #[test]
+    fn read_value_generic() {
+        enum Array<T, const N: usize> {
+            _Phantom(
+                std::convert::Infallible,
+                std::marker::PhantomData<fn() -> T>,
+            ),
+        }
+
+        impl<T: crate::source::Readable, const N: usize> crate::source::Readable for Array<T, N> {
+            type Output = [T::Output; N];
+
+            fn read<R: std::io::BufRead, S: crate::source::Source<R>>(
+                source: &mut S,
+            ) -> Self::Output {
+                std::array::from_fn(|_| T::read(source))
+            }
+        }
+
+        let mut source = AutoSource::from("1 2 3 4 5 6 7 8");
+
+        let a = read_value!(from &mut source, Array<i32, 5>);
+        let b = read_value!(from &mut source, Array<i32, 3>);
+
+        assert_eq!(a, [1, 2, 3, 4, 5]);
+        assert_eq!(b, [6, 7, 8]);
+    }
+
+    #[test]
     fn input_runtime_readable() {
         // VecReadable<T> replicates the built-in Vec reader `input!(v: [T])` in user-land.
         struct VecReadable<T> {
@@ -1109,6 +1264,49 @@ mod tests {
             n: usize,
             v: with VecReadable::<crate::marker::Usize1>::new(n),
         }
+
+        assert_eq!(v, [0, 1, 2, 3]);
+    }
+
+    #[test]
+    fn read_value_runtime_readable() {
+        // VecReadable<T> replicates the built-in Vec reader `input!(v: [T])` in user-land.
+        struct VecReadable<T> {
+            n: usize,
+            _marker: PhantomData<T>,
+        }
+
+        impl<T> VecReadable<T> {
+            pub fn new(n: usize) -> Self {
+                VecReadable {
+                    n,
+                    _marker: PhantomData,
+                }
+            }
+        }
+
+        impl<T: crate::source::Readable> crate::source::RuntimeReadable for VecReadable<T> {
+            type Output = Vec<T::Output>;
+
+            fn read<R: std::io::BufRead, S: crate::source::Source<R>>(
+                self,
+                source: &mut S,
+            ) -> Self::Output {
+                let mut res = vec![];
+                for _ in 0..self.n {
+                    input! {
+                        from &mut *source,
+                        v: T,
+                    }
+                    res.push(v);
+                }
+                res
+            }
+        }
+
+        let mut source = AutoSource::from("4 1 2 3 4");
+        let n = read_value!(from &mut source, usize);
+        let v = read_value!(from &mut source, with VecReadable::<crate::marker::Usize1>::new(n));
 
         assert_eq!(v, [0, 1, 2, 3]);
     }
