@@ -513,11 +513,14 @@ pub mod marker;
 pub mod source;
 
 use crate::source::{auto::AutoSource, line::LineSource};
-use std::io::{BufReader, Stdin};
 use std::sync::OnceLock;
 use std::{
     io::{self, BufRead},
     sync::Mutex,
+};
+use std::{
+    io::{BufReader, Stdin},
+    sync::MutexGuard,
 };
 
 // Prepares a short path to `Readable` to enables rust-analyzer to infer `Readable::Output`.
@@ -664,19 +667,7 @@ macro_rules! input {
         }
     };
     ($($rest:tt)*) => {
-        let mut locked_stdin = $crate::STDIN_SOURCE
-            .get_or_init(|| {
-                std::sync::Mutex::new($crate::StdinSource::Normal(
-                    $crate::source::auto::AutoSource::new(std::io::BufReader::new(std::io::stdin())),
-                ))
-            })
-            .lock()
-            .expect(concat!(
-                "failed to lock the stdin; please re-run this program.  ",
-                "If this issue repeatedly occur, this is a bug in `proconio`.  ",
-                "Please report this issue from ",
-                "<https://github.com/statiolake/proconio-rs/issues>."
-            ));
+        let mut locked_stdin = $crate::__acquire_global_stdin_lock();
         $crate::input! {
             @from [&mut *locked_stdin]
             @rest $($rest)*
@@ -704,19 +695,7 @@ macro_rules! input {
 #[macro_export]
 macro_rules! input_interactive {
     ($($rest:tt)*) => {
-        let mut locked_stdin = $crate::STDIN_SOURCE
-            .get_or_init(|| {
-                std::sync::Mutex::new($crate::StdinSource::Interactive(
-                    $crate::source::line::LineSource::new(std::io::BufReader::new(std::io::stdin())),
-                ))
-            })
-            .lock()
-            .expect(concat!(
-                "failed to lock the stdin; please re-run this program.  ",
-                "If this issue repeatedly occur, this is a bug in `proconio`.  ",
-                "Please report this issue from ",
-                "<https://github.com/statiolake/proconio-rs/issues>."
-            ));
+        let mut locked_stdin = $crate::__acquire_global_stdin_lock();
         $crate::input! {
             from &mut *locked_stdin,
             $($rest)*
@@ -845,23 +824,30 @@ macro_rules! read_value {
 #[macro_export]
 macro_rules! read_value_interactive {
     ($($rest:tt)*) => {
-        let mut locked_stdin = $crate::STDIN_SOURCE
-            .get_or_init(|| {
-                std::sync::Mutex::new($crate::StdinSource::Interactive(
-                    $crate::source::line::LineSource::new(std::io::BufReader::new(std::io::stdin())),
-                ))
-            })
-            .lock()
-            .expect(concat!(
-                "failed to lock the stdin; please re-run this program.  ",
-                "If this issue repeatedly occur, this is a bug in `proconio`.  ",
-                "Please report this issue from ",
-                "<https://github.com/statiolake/proconio-rs/issues>."
-            ));
+        let mut locked_stdin = $crate::acquire_global_stdin_lock();
         let __res = $crate::read_value!(from &mut *locked_stdin, $($rest)*);
         drop(locked_stdin); // release the lock
         __res
     };
+}
+
+// Acquires the global stdin lock. This must be public because it appears in macro-expanded code,
+// but hidden in doc because this implementation detail should be considered as private.
+#[doc(hidden)]
+pub fn __acquire_global_stdin_lock() -> MutexGuard<'static, StdinSource<BufReader<Stdin>>> {
+    STDIN_SOURCE
+        .get_or_init(|| {
+            Mutex::new(StdinSource::Unknown(LineSource::new(BufReader::new(
+                io::stdin(),
+            ))))
+        })
+        .lock()
+        .expect(concat!(
+            "failed to lock the stdin; please re-run this program.  ",
+            "If this issue repeatedly occur, this is a bug in `proconio`.  ",
+            "Please report this issue from ",
+            "<https://github.com/statiolake/proconio-rs/issues>."
+        ))
 }
 
 /// Checks if some of tokens are left on stdin.
@@ -880,19 +866,7 @@ macro_rules! read_value_interactive {
 /// ```
 pub fn is_stdin_empty() -> bool {
     use source::Source;
-    let mut lock = STDIN_SOURCE
-        .get_or_init(|| {
-            Mutex::new(StdinSource::Unknown(LineSource::new(BufReader::new(
-                io::stdin(),
-            ))))
-        })
-        .lock()
-        .expect(concat!(
-            "failed to lock the stdin; please re-run this program.  ",
-            "If this issue repeatedly occur, this is a bug in `proconio`.  ",
-            "Please report this issue from ",
-            "<https://github.com/statiolake/proconio-rs/issues>."
-        ));
+    let mut lock = __acquire_global_stdin_lock();
     lock.is_empty()
 }
 
