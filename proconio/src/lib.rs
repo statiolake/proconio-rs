@@ -9,8 +9,9 @@
 
 //! Easy IO library for competitive programming.
 //!
-//! `proconio` provides an easy way to read values from stdin (or other source).  The main is
-//! `input!` macro.
+//! `proconio` provides an easy way to read values from stdin (or other source).  The main feature
+//! provided by this crate is `input!` macro (and its family, `input_interactive!`, `read_value!`,
+//! and `read_value_interactive!`).
 //!
 //! # Examples
 //!
@@ -295,6 +296,35 @@
 //! # }
 //! ```
 //!
+//! # `read_value!` macro
+//!
+//! `read_value!` macro is a macro used inside the `input!` macro, but using it directly is also
+//! useful in some cases. Typically when you don't need to store the value into a variable.
+//!
+//! ```rust
+//! # extern crate proconio;
+//! use proconio::source::auto::AutoSource;
+//! use proconio::read_value;
+//! let mut source = AutoSource::from("2 3 4");
+//! let mut sum = 0;
+//! for _ in 0..read_value!(from &mut source, usize) {
+//!     sum += read_value!(from &mut source, u32);
+//! }
+//! assert_eq!(sum, 7);
+//! ```
+//!
+//! # Interactive version
+//!
+//! The normal `input!` and `read_value!` macro reads the entire input at once in judge environment
+//! to optimize I/O performance. However this does not work well with interactive problems, since
+//! in those problems you need to communicate with the judge by writing and reading alternately.
+//!
+//! In this case, you can manually create LineSource for stdin. There's handy interactive version of
+//! the macros doing exactly that. They are `input_interactive!` and `read_value_interactive!`.
+//!
+//! The usage of those macros are exactly the same with the normal ones. Refer to the document of
+//! [input!](input) and [read_value!](read_value) for further information.
+//!
 //! # `#[fastout]`
 //!
 //! If you import `proconio::fastout`, you can use `#[fastout]` attribute.  Adding this attribute
@@ -503,7 +533,7 @@
 //! world
 //! ```
 //!
-//! If you don't like this behavior, you can remove #[fastout] from your `main()`.
+//! If you don't like this behavior, you can remove `#[fastout]` from your `main()`.
 //!
 
 #[cfg(feature = "derive")]
