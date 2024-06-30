@@ -1,6 +1,6 @@
 [package]
 name = "proconio"
-version = "0.4.5"
+version = "0.5.0"
 authors = ["statiolake <statiolake@gmail.com>"]
 edition = "2018"
 rust-version = "1.70.0"
