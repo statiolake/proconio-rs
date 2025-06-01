@@ -60,6 +60,10 @@ optional = true
 rustversion = "1.0.2"
 trybuild = "=1.0.67"
 assert_cli = "0.6.3"
+# Pin backtrace version because assert_cli -> failure -> backtrace transitively
+# depends on it, and backtrace 0.3.75+ requires a newer Rust version than our
+# MSRV (1.70.0)
+backtrace = "=0.3.74"
 
 [features]
 derive = ["proconio-derive"]
