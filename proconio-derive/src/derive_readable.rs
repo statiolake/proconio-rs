@@ -173,7 +173,7 @@ fn field_unnamed(fields: &Fields) -> Vec<FieldInfo> {
     let mut res = Vec::new();
 
     for (idx, field) in fields.iter().enumerate() {
-        let ident = format!("field{}", idx);
+        let ident = format!("field{idx}");
         let ident = Ident::new(&ident, Span2::call_site());
         let ty = field.ty.clone();
         let read = quote! {

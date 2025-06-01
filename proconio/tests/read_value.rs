@@ -12,7 +12,7 @@ fn test_stdin() {
     for _ in 0..read_value!(usize) {
         sum += read_value!(u32);
     }
-    println!("{}", sum);
+    println!("{sum}");
 }
 
 fn test_for(input: &str, expected_stdout: &str) {

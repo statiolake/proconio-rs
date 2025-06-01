@@ -13,17 +13,17 @@ fn test_stdin() {
         n: usize,
     }
     assert!(!is_stdin_empty());
-    println!("{}", n);
+    println!("{n}");
 
     for c in 0..n {
-        println!("start {}", c);
+        println!("start {c}");
         assert!(!is_stdin_empty());
         input_interactive! {
             i: isize,
             j: isize,
         }
 
-        println!("{} {}", i, j);
+        println!("{i} {j}");
     }
     assert!(is_stdin_empty());
 }
