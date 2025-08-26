@@ -39,8 +39,8 @@ jobs:
           # Replace __cargo_equip → proconio_bundled
           sed "s/__cargo_equip/proconio_bundled/g" build/equip.raw.rs > build/equip.replaced.rs
 
-          # Remove proconio_bundled_macro_def_
-          sed -i "/proconio_bundled_macro_def_/d" build/equip.replaced.rs
+          # Replace proconio_bundled_macro_def_* -> *
+          sed -i "s/proconio_bundled_macro_def_*/\*/g" build/equip.replaced.rs
 
           # Keep from first #[allow(unused)] to the end
           sed -n '/#\[allow(unused)\]/,$p' build/equip.replaced.rs > build/proconio_bundled.rs
