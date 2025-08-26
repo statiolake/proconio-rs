@@ -19,12 +19,6 @@ jobs:
       - name: Set up Rust (stable)
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Cache cargo binaries
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/bin
-          key: cargo-bin-${{ runner.os }}-v1
-
       - name: Install cargo-equip
         run: cargo install cargo-equip --locked || true
 
