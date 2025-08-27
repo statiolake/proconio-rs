@@ -31,7 +31,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "TAG=nightly" >> "$GITHUB_OUTPUT"
             echo "PRERELEASE=true" >> "$GITHUB_OUTPUT"
-            echo "REL_NAME=Nightly $(date -u +'%Y-%m-%dT%H:%MZ')" >> "$GITHUB_OUTPUT"
+            echo "REL_NAME=Nightly $(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
           else
             echo "TAG=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
             echo "PRERELEASE=false" >> "$GITHUB_OUTPUT"
