@@ -78,6 +78,8 @@ jobs:
         with:
           tag_name: ${{ steps.release_vars.outputs.TAG }}
           name: ${{ steps.release_vars.outputs.REL_NAME }}
+          body: |
+            ⚠️ **Experimental Warning**: The bundled version (proconio_bundled.rs) is experimental and not tested. It may not work correctly in all environments. Using the bundled version may cause CE or RE that would not occur with the regular crate version. Please use with caution.
           draft: false
           prerelease: ${{ steps.release_vars.outputs.PRERELEASE }}
           files: |
