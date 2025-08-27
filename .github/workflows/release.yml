@@ -1,0 +1,59 @@
+name: Build with cargo-equip and release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - "*-v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-equip
+        run: cargo install cargo-equip --locked || true
+
+      - name: Run cargo equip
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          cargo equip --remove docs --remove comments --minify all > build/equip.raw.rs
+
+      - name: Transform output
+        run: |
+          set -euo pipefail
+          if ! grep -q '#\[allow(unused)\]' build/equip.raw.rs; then
+            echo "ERROR: Marker '#[allow(unused)]' not found in cargo-equip output." >&2
+            exit 1
+          fi
+
+          # Replace __cargo_equip → proconio_bundled
+          sed "s/__cargo_equip/proconio_bundled/g" build/equip.raw.rs > build/equip.replaced.rs
+
+          # Replace proconio_bundled_macro_def_proconio_* -> *
+          sed -i "s/proconio_bundled_macro_def_proconio_//g" build/equip.replaced.rs
+
+          # Keep from first #[allow(unused)] to the end
+          sed -n '/#\[allow(unused)\]/,$p' build/equip.replaced.rs > build/proconio_bundled.rs
+
+          echo "Final file at build/proconio_bundled.rs"
+          wc -l build/proconio_bundled.rs
+
+      - name: Create GitHub Release and upload asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          files: |
+            build/proconio_bundled.rs
