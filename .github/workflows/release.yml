@@ -5,6 +5,7 @@ on:
     tags:
       - "v*.*.*"
       - "*-v*.*.*"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -15,12 +16,36 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history to possibly update tags
 
       - name: Set up Rust (stable)
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install cargo-equip
         run: cargo install cargo-equip --locked || true
+
+      - name: Determine release variables
+        id: release_vars
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "TAG=nightly" >> "$GITHUB_OUTPUT"
+            echo "PRERELEASE=true" >> "$GITHUB_OUTPUT"
+            echo "REL_NAME=Nightly $(date -u +'%Y-%m-%dT%H:%MZ')" >> "$GITHUB_OUTPUT"
+          else
+            echo "TAG=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "PRERELEASE=false" >> "$GITHUB_OUTPUT"
+            echo "REL_NAME=Release ${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create or update nightly tag
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          set -euo pipefail
+          git config user.name "statiolake"
+          git config user.email "statiolake@gmail.com"
+          git tag -f nightly
+          git push origin refs/tags/nightly --force
 
       - name: Run cargo equip
         run: |
@@ -51,9 +76,9 @@ jobs:
       - name: Create GitHub Release and upload asset
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          tag_name: ${{ steps.release_vars.outputs.TAG }}
+          name: ${{ steps.release_vars.outputs.REL_NAME }}
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.release_vars.outputs.PRERELEASE }}
           files: |
             build/proconio_bundled.rs
