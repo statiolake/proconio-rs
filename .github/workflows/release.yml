@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           fetch-depth: 0 # Fetch all history to possibly update tags
 
@@ -74,7 +74,7 @@ jobs:
           wc -l build/proconio_bundled.rs
 
       - name: Create GitHub Release and upload asset
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
         with:
           tag_name: ${{ steps.release_vars.outputs.TAG }}
           name: ${{ steps.release_vars.outputs.REL_NAME }}
