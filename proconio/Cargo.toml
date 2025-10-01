@@ -67,3 +67,10 @@ backtrace = "=0.3.74"
 
 [features]
 derive = ["proconio-derive"]
+
+# Patch windows-sys to 0.60.2 to maintain compatibility with Rust 1.70
+# (newer versions require Rust 1.71+)
+# The UI testing library `trybuild` depends on it.
+# If AtCoder updates their Rust version, this patch can be removed.
+[patch.crates-io]
+windows-sys = "=0.60.2"
