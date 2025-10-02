@@ -7,7 +7,7 @@ error: format argument must be a string literal
 help: you might be missing a string literal to format with
   |
 5 |     println!("{}", 42);
-  |              ^^^^^
+  |              +++++
 
 error: format argument must be a string literal
  --> $DIR/format-argument-must-be-a-string-literal.rs:8:14
@@ -18,4 +18,4 @@ error: format argument must be a string literal
 help: you might be missing a string literal to format with
   |
 8 |     println!("{}", x);
-  |              ^^^^^
+  |              +++++

@@ -5,7 +5,7 @@ authors = ["statiolake <statiolake@gmail.com>"]
 edition = "2018"
 rust-version = "1.70.0"
 repository = "https://github.com/statiolake/proconio-rs"
-keywords = ["io", "procon", "procon"]
+keywords = ["io", "procon"]
 categories = ["command-line-interface"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -64,6 +64,12 @@ assert_cli = "0.6.3"
 # depends on it, and backtrace 0.3.75+ requires a newer Rust version than our
 # MSRV (1.70.0)
 backtrace = "=0.3.74"
+
+[target.'cfg(windows)'.dev-dependencies]
+# Pin winapi-util to 0.1.10 because 0.1.11+ allows windows-sys 0.61 which
+# requires Rust 1.71+ (via windows-link dependency)
+# Remove this override when we bump our MSRV to 1.71+
+winapi-util = "=0.1.10"
 
 [features]
 derive = ["proconio-derive"]
