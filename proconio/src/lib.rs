@@ -711,7 +711,7 @@ macro_rules! input {
 /// This macro is effectively an alias of:
 ///
 /// ```text
-/// let source = procontio::source::line::LineSource::new(BufReader::new(std::io::stdin()));
+/// let source = proconio::source::line::LineSource::new(BufReader::new(std::io::stdin()));
 /// input! {
 ///     from &mut source,
 ///     (mut) variable: type,
@@ -844,7 +844,7 @@ macro_rules! read_value {
 /// This macro is equivalent to do the following:
 ///
 /// ```text
-/// let source = procontio::source::line::LineSource::new(BufReader::new(std::io::stdin()));
+/// let source = proconio::source::line::LineSource::new(BufReader::new(std::io::stdin()));
 /// let variable = read_value!(from &mut source, type);
 /// ```
 ///
