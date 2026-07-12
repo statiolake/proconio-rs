@@ -313,14 +313,18 @@
 //! assert_eq!(sum, 7);
 //! ```
 //!
-//! # Interactive version
+//! # Interactive problems and `input_once!`
 //!
-//! The normal `input!` and `read_value!` macro reads the entire input at once in judge environment
-//! to optimize I/O performance. However this does not work well with interactive problems, since
-//! in those problems you need to communicate with the judge by writing and reading alternately.
+//! The normal `input!` and `read_value!` macros read the input from stdin line by line.  This
+//! works for interactive problems out of the box, since you can communicate with the judge by
+//! writing and reading alternately.  The deprecated `input_interactive!` and
+//! `read_value_interactive!` macros are kept as aliases of `input!` and `read_value!` for
+//! backward compatibility.
 //!
-//! In this case, you can manually create LineSource for stdin. There's handy interactive version of
-//! the macros doing exactly that. They are `input_interactive!` and `read_value_interactive!`.
+//! If you want to optimize I/O performance for non-interactive problems, you can use
+//! `input_once!` and `read_value_once!` instead.  They read the entire input at once, which is
+//! slightly faster than reading line by line.  Note that they of course don't work with
+//! interactive problems, and cannot be mixed with the line-by-line macros in one program.
 //!
 //! The usage of those macros are exactly the same with the normal ones. Refer to the document of
 //! [input!](input) and [read_value!](read_value) for further information.
@@ -542,7 +546,7 @@ pub use proconio_derive::*;
 pub mod marker;
 pub mod source;
 
-use crate::source::{auto::AutoSource, line::LineSource};
+use crate::source::{line::LineSource, once::OnceSource};
 use std::sync::OnceLock;
 use std::{
     io::{self, BufRead},
@@ -558,25 +562,22 @@ use std::{
 pub use crate::source::Readable as __Readable;
 
 pub enum StdinSource<R: BufRead> {
-    Normal(AutoSource<R>),      // for input!
-    Interactive(LineSource<R>), // for for input_interactive!
-    Unknown(LineSource<R>),     // for is_stdin_empty() without input! or input_interactive!
+    Line(LineSource<R>), // for input!, read_value! and is_stdin_empty()
+    Once(OnceSource<R>), // for input_once! and read_value_once!
 }
 
 impl<R: BufRead> source::Source<R> for StdinSource<R> {
     fn next_token(&mut self) -> Option<&str> {
         match self {
-            StdinSource::Normal(source) => source.next_token(),
-            StdinSource::Interactive(source) => source.next_token(),
-            StdinSource::Unknown(source) => source.next_token(),
+            StdinSource::Line(source) => source.next_token(),
+            StdinSource::Once(source) => source.next_token(),
         }
     }
 
     fn is_empty(&mut self) -> bool {
         match self {
-            StdinSource::Normal(source) => source.is_empty(),
-            StdinSource::Interactive(source) => source.is_empty(),
-            StdinSource::Unknown(source) => source.is_empty(),
+            StdinSource::Line(source) => source.is_empty(),
+            StdinSource::Once(source) => source.is_empty(),
         }
     }
 }
@@ -697,7 +698,7 @@ macro_rules! input {
         }
     };
     ($($rest:tt)*) => {
-        let mut locked_stdin = $crate::__acquire_global_stdin_lock();
+        let mut locked_stdin = $crate::__acquire_global_stdin_lock_line();
         $crate::input! {
             @from [&mut *locked_stdin]
             @rest $($rest)*
@@ -706,29 +707,53 @@ macro_rules! input {
     };
 }
 
-/// Interactive version of input! macro.
+/// Deprecated alias of input! macro.
 ///
-/// This macro is effectively an alias of:
-///
-/// ```text
-/// let source = proconio::source::line::LineSource::new(BufReader::new(std::io::stdin()));
-/// input! {
-///     from &mut source,
-///     (mut) variable: type,
-///     ...
-/// }
-/// ```
-///
-/// With this macro, you always read inputs line-by-line. You can use this as a drop-in replacement
-/// for input! macro in interactive problems. Other than that, usage are the same with input! macro.
-/// Read the document of [input!](input) for further information.
+/// The input! macro now always reads the input line by line and works for interactive problems
+/// out of the box, so this macro is no longer needed. It is kept as an alias of input! for
+/// backward compatibility. Read the document of [input!](input) for further information.
+#[deprecated(
+    since = "0.6.0",
+    note = "`input!` now always reads the input line by line and works for interactive problems; use `input!` instead"
+)]
 #[macro_export]
 macro_rules! input_interactive {
     ($($rest:tt)*) => {
-        let mut locked_stdin = $crate::__acquire_global_stdin_lock();
         $crate::input! {
-            from &mut *locked_stdin,
             $($rest)*
+        }
+    };
+}
+
+/// Faster version of input! macro, reading the entire input at once.
+///
+/// This macro reads the entire input at the first invocation and gives out tokens from the
+/// buffered input afterwards, which is slightly faster than the line-by-line reading of input!
+/// macro. Note the following restrictions:
+///
+/// - It does not work with interactive problems: the first invocation blocks until the input
+///   reaches EOF. For the same reason, when you feed the input by hand in a terminal, you need to
+///   terminate the input by EOF (Ctrl-D on Unix or Ctrl-Z on Windows).
+/// - It cannot be mixed with the line-by-line macros (input!, read_value! or is_stdin_empty())
+///   in one program. Such a mixed use causes a panic at run time.
+/// - It does not support the `from source` syntax. Use input! if you want to read from your own
+///   source.
+///
+/// Other than that, usage are the same with input! macro. Read the document of [input!](input)
+/// for further information.
+#[macro_export]
+macro_rules! input_once {
+    (from $($rest:tt)*) => {
+        compile_error!(concat!(
+            "`input_once!` does not support the `from source` syntax.  ",
+            "Use `input!` with your own source instead."
+        ));
+    };
+    ($($rest:tt)*) => {
+        let mut locked_stdin = $crate::__acquire_global_stdin_lock_once();
+        $crate::input! {
+            @from [&mut *locked_stdin]
+            @rest $($rest)*
         }
         drop(locked_stdin); // release the lock
     };
@@ -820,57 +845,95 @@ macro_rules! read_value {
         $crate::read_value!(@source [&mut s] @kind [$($rest)*])
     }};
     ($($rest:tt)*) => {{
-        let mut locked_stdin = $crate::STDIN_SOURCE
-            .get_or_init(|| {
-                std::sync::Mutex::new($crate::StdinSource::Normal(
-                    $crate::source::auto::AutoSource::new(std::io::BufReader::new(std::io::stdin())),
-                ))
-            })
-            .lock()
-            .expect(concat!(
-                "failed to lock the stdin; please re-run this program.  ",
-                "If this issue repeatedly occur, this is a bug in `proconio`.  ",
-                "Please report this issue from ",
-                "<https://github.com/statiolake/proconio-rs/issues>."
-            ));
+        let mut locked_stdin = $crate::__acquire_global_stdin_lock_line();
         let __res = $crate::read_value!(from &mut *locked_stdin, $($rest)*);
         drop(locked_stdin); // release the lock
         __res
     }};
 }
 
-/// Interactive version of `read_value!` macro.
+/// Deprecated alias of `read_value!` macro.
 ///
-/// This macro is equivalent to do the following:
-///
-/// ```text
-/// let source = proconio::source::line::LineSource::new(BufReader::new(std::io::stdin()));
-/// let variable = read_value!(from &mut source, type);
-/// ```
-///
-/// With this macro, you always read inputs line-by-line. You can use this as a drop-in replacement
-/// for read_value! macro in interactive problems. Other than that, usage are the same with
-/// read_value! macro. Read the document of [read_value!](read_value) for further information.
+/// The read_value! macro now always reads the input line by line and works for interactive
+/// problems out of the box, so this macro is no longer needed. It is kept as an alias of
+/// read_value! for backward compatibility. Read the document of [read_value!](read_value) for
+/// further information.
+#[deprecated(
+    since = "0.6.0",
+    note = "`read_value!` now always reads the input line by line and works for interactive problems; use `read_value!` instead"
+)]
 #[macro_export]
 macro_rules! read_value_interactive {
+    ($($rest:tt)*) => {
+        $crate::read_value!($($rest)*)
+    };
+}
+
+/// Faster version of `read_value!` macro, reading the entire input at once.
+///
+/// The restrictions of [input_once!](input_once) apply to this macro as well: it does not work
+/// with interactive problems, cannot be mixed with the line-by-line macros in one program, and
+/// does not support the `from source` syntax. Other than that, usage are the same with
+/// read_value! macro. Read the document of [read_value!](read_value) for further information.
+#[macro_export]
+macro_rules! read_value_once {
+    (from $($rest:tt)*) => {
+        compile_error!(concat!(
+            "`read_value_once!` does not support the `from source` syntax.  ",
+            "Use `read_value!` with your own source instead."
+        ));
+    };
     ($($rest:tt)*) => {{
-        let mut locked_stdin = $crate::__acquire_global_stdin_lock();
+        let mut locked_stdin = $crate::__acquire_global_stdin_lock_once();
         let __res = $crate::read_value!(from &mut *locked_stdin, $($rest)*);
         drop(locked_stdin); // release the lock
         __res
     }};
 }
 
-// Acquires the global stdin lock. This must be public because it appears in macro-expanded code,
-// but hidden in doc because this implementation detail should be considered as private.
+// Acquires the global stdin lock, initializing the source as the line-by-line reader if it is not
+// initialized yet. This must be public because it appears in macro-expanded code, but hidden in
+// doc because this implementation detail should be considered as private.
 #[doc(hidden)]
-pub fn __acquire_global_stdin_lock() -> MutexGuard<'static, StdinSource<BufReader<Stdin>>> {
+pub fn __acquire_global_stdin_lock_line() -> MutexGuard<'static, StdinSource<BufReader<Stdin>>> {
+    let locked_stdin = lock_global_stdin_source(|| {
+        StdinSource::Line(LineSource::new(BufReader::new(io::stdin())))
+    });
+    if let StdinSource::Once(_) = &*locked_stdin {
+        panic!(concat!(
+            "cannot use `input!` / `read_value!` (or their deprecated `_interactive` aliases) ",
+            "or `is_stdin_empty()` after `input_once!` / `read_value_once!`: the stdin source ",
+            "is already initialized to read the entire input at once.  ",
+            "Please use only one family of the macros in a program."
+        ));
+    }
+    locked_stdin
+}
+
+// Acquires the global stdin lock, initializing the source as the read-at-once reader if it is not
+// initialized yet. This must be public because it appears in macro-expanded code, but hidden in
+// doc because this implementation detail should be considered as private.
+#[doc(hidden)]
+pub fn __acquire_global_stdin_lock_once() -> MutexGuard<'static, StdinSource<BufReader<Stdin>>> {
+    let locked_stdin = lock_global_stdin_source(|| {
+        StdinSource::Once(OnceSource::new(BufReader::new(io::stdin())))
+    });
+    if let StdinSource::Line(_) = &*locked_stdin {
+        panic!(concat!(
+            "cannot use `input_once!` / `read_value_once!` after `input!` / `read_value!` ",
+            "(or their deprecated `_interactive` aliases) or `is_stdin_empty()`: the stdin ",
+            "source is already initialized to read the input line by line.  ",
+            "Please use only one family of the macros in a program."
+        ));
+    }
+    locked_stdin
+}
+
+fn lock_global_stdin_source(
+    init: impl FnOnce() -> StdinSource<BufReader<Stdin>>,
+) -> MutexGuard<'static, StdinSource<BufReader<Stdin>>> {
     STDIN_SOURCE
-        .get_or_init(|| {
-            Mutex::new(StdinSource::Unknown(LineSource::new(BufReader::new(
-                io::stdin(),
-            ))))
-        })
+        .get_or_init(|| Mutex::new(init()))
         .lock()
         .expect(concat!(
             "failed to lock the stdin; please re-run this program.  ",
@@ -896,7 +959,12 @@ pub fn __acquire_global_stdin_lock() -> MutexGuard<'static, StdinSource<BufReade
 /// ```
 pub fn is_stdin_empty() -> bool {
     use source::Source;
-    let mut lock = __acquire_global_stdin_lock();
+    // Note: this works with whichever source is in use, but if this is the first access to
+    // stdin, it initializes the source as the line-by-line reader. In other words, calling this
+    // function first and then using `input_once!` / `read_value_once!` is not allowed.
+    let mut lock = lock_global_stdin_source(|| {
+        StdinSource::Line(LineSource::new(BufReader::new(io::stdin())))
+    });
     lock.is_empty()
 }
 

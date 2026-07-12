@@ -5,6 +5,9 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be copied, modified, or
 // distributed except according to those terms.
 
+// read_value_interactive! is deprecated but must keep working as an alias of read_value!
+#![allow(deprecated)]
+
 use proconio::read_value_interactive;
 
 fn test_stdin() {

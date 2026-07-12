@@ -5,6 +5,9 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be copied, modified, or
 // distributed except according to those terms.
 
+// input_interactive! is deprecated but must keep working as an alias of input!
+#![allow(deprecated)]
+
 use proconio::{input_interactive, is_stdin_empty};
 
 fn test_stdin() {

@@ -12,14 +12,16 @@
 //! 1. Read entire source at once.  (`once::OnceSource`)
 //! 1. Read source line by line.  (`line::LineSource`)
 //!
-//! `OnceSource` is very fast, while `LineSource` is handy for local debugging. `OnceSource` must
-//! read entire input before any other work and you must put EOF (Ctrl-D on Unix or Ctrl-Z on
-//! Windows) after input.  LineSource reads source one by one.  Simply press enter to input.
+//! `OnceSource` is very fast, while `LineSource` is handy for local debugging and interactive
+//! problems. `OnceSource` must read entire input before any other work and you must put EOF
+//! (Ctrl-D on Unix or Ctrl-Z on Windows) after input.  LineSource reads source one by one.
+//! Simply press enter to input.
 //!
 //! There is another source named `auto::AutoSource`.  `AutoSource` is `OnceSource` in release
-//! build, is `LineSource` in debug build.  If you use debug build in local testing, `LineSource`,
-//! convenience version is used.  In judge server it is compiled in release mode, so `OnceSource`,
-//! faster version is used.  This is usually no problem in judging (except interactive problem?).
+//! build, is `LineSource` in debug build.  This source is kept for backward compatibility, but
+//! it is no longer used by the macros: `input!` always uses `LineSource` and `input_once!`
+//! always uses `OnceSource`, regardless of the build profile, so that the behavior does not
+//! differ between local testing and the judge server.
 //!
 //! You can specify the source to be used in `input!` as follows:
 //!
@@ -47,11 +49,10 @@
 //! directly from the value of type implementing `BufRead` by using `OnceSource::new()` and
 //! `LineSource::new()`.
 //!
-//! If you use `input!` macro with no source specified then it uses `AutoSource` with stdin.  So,
-//! locally `LineSource` are used, in the server `OnceSource` are used.  `OnceSource` and
-//! `LineSource` behaves samely in point of the read result, but, unintentionally, it may differ in
-//! a bare possibility. If it should differ, you can manually specify `LineSource` as `source` of
-//! `input!`.
+//! If you use `input!` macro with no source specified then it uses `LineSource` with stdin, and
+//! `input_once!` uses `OnceSource` with stdin.  `OnceSource` and `LineSource` behaves samely in
+//! point of the read result, but, unintentionally, it may differ in a bare possibility. If it
+//! should differ, you can manually specify the source of `input!`.
 use std::any::type_name;
 use std::fmt::Debug;
 use std::io::BufRead;
