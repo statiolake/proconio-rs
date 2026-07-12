@@ -853,12 +853,12 @@ macro_rules! read_value {
 /// read_value! macro. Read the document of [read_value!](read_value) for further information.
 #[macro_export]
 macro_rules! read_value_interactive {
-    ($($rest:tt)*) => {
-        let mut locked_stdin = $crate::acquire_global_stdin_lock();
+    ($($rest:tt)*) => {{
+        let mut locked_stdin = $crate::__acquire_global_stdin_lock();
         let __res = $crate::read_value!(from &mut *locked_stdin, $($rest)*);
         drop(locked_stdin); // release the lock
         __res
-    };
+    }};
 }
 
 // Acquires the global stdin lock. This must be public because it appears in macro-expanded code,
