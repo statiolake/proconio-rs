@@ -29,6 +29,11 @@ path = "tests/interactive.rs"
 harness = false
 
 [[test]]
+name = "read_value_interactive"
+path = "tests/read_value_interactive.rs"
+harness = false
+
+[[test]]
 name = "derive"
 path = "tests/derive.rs"
 required-features = ["derive"]
