@@ -34,6 +34,16 @@ path = "tests/read_value_interactive.rs"
 harness = false
 
 [[test]]
+name = "input_once"
+path = "tests/input_once.rs"
+harness = false
+
+[[test]]
+name = "mixed_source"
+path = "tests/mixed_source.rs"
+harness = false
+
+[[test]]
 name = "derive"
 path = "tests/derive.rs"
 required-features = ["derive"]

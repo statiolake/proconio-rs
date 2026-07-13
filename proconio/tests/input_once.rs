@@ -5,19 +5,17 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be copied, modified, or
 // distributed except according to those terms.
 
-// read_value_interactive! is deprecated but must keep working as an alias of read_value!
-#![allow(deprecated)]
-
-use proconio::read_value_interactive;
+use proconio::{input_once, read_value_once};
 
 fn test_stdin() {
-    // read_value_interactive! must be usable in expression position
-    let n = read_value_interactive!(usize);
+    input_once! {
+        n: usize,
+    }
     println!("{n}");
 
     let mut sum = 0;
     for _ in 0..n {
-        sum += read_value_interactive!(u32);
+        sum += read_value_once!(u32);
     }
     println!("{sum}");
 }

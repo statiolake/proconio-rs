@@ -5,40 +5,37 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be copied, modified, or
 // distributed except according to those terms.
 
-// read_value_interactive! is deprecated but must keep working as an alias of read_value!
-#![allow(deprecated)]
-
-use proconio::read_value_interactive;
+use proconio::{input, input_once};
 
 fn test_stdin() {
-    // read_value_interactive! must be usable in expression position
-    let n = read_value_interactive!(usize);
+    input! {
+        n: usize,
+    }
     println!("{n}");
 
-    let mut sum = 0;
-    for _ in 0..n {
-        sum += read_value_interactive!(u32);
+    // mixing the line-by-line macros and the read-at-once macros must panic
+    input_once! {
+        m: usize,
     }
-    println!("{sum}");
+    println!("{m}");
 }
 
-fn test_for(input: &str, expected_stdout: &str) {
+fn test_panics(input: &str) {
     use assert_cli::Assert;
     use std::env::args;
     Assert::command(&[&*args().next().unwrap(), "foo"])
         .stdin(input)
-        .stdout()
-        .is(expected_stdout)
+        .fails()
         .and()
         .stderr()
-        .is("")
+        .contains("cannot use `input_once!` / `read_value_once!` after")
         .unwrap();
 }
 
 fn main() {
     use std::env::args;
     if args().len() == 1 {
-        test_for("3\n2 3 7\n", "3\n12\n");
+        test_panics("1 2\n");
         return;
     }
 
