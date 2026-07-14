@@ -10,8 +10,8 @@
 //! Easy IO library for competitive programming.
 //!
 //! `proconio` provides an easy way to read values from stdin (or other source).  The main feature
-//! provided by this crate is `input!` macro (and its family, `input_interactive!`, `read_value!`,
-//! and `read_value_interactive!`).
+//! provided by this crate is `input!` macro (and its family, `read_value!`, `input_once!`,
+//! and `read_value_once!`).
 //!
 //! # Examples
 //!
@@ -313,20 +313,23 @@
 //! assert_eq!(sum, 7);
 //! ```
 //!
-//! # Interactive problems and `input_once!`
+//! # Line-by-line input by default
 //!
-//! The normal `input!` and `read_value!` macros read the input from stdin line by line.  This
-//! works for interactive problems out of the box, since you can communicate with the judge by
-//! writing and reading alternately.  The deprecated `input_interactive!` and
-//! `read_value_interactive!` macros are kept as aliases of `input!` and `read_value!` for
-//! backward compatibility.
+//! As of 0.6.0, `input!` and `read_value!` always read stdin line by line.  This is a
+//! deliberate change.  Previously, debug builds read line by line but release builds read
+//! everything at once.  That mismatch between local testing and the judge occasionally
+//! caused trouble, most notably with interactive problems.  Meanwhile, input speed is
+//! rarely the bottleneck in Rust, so this change should not cause TLEs in practice.
 //!
-//! If you want to optimize I/O performance for non-interactive problems, you can use
-//! `input_once!` and `read_value_once!` instead.  They read the entire input at once, which is
-//! slightly faster than reading line by line.  Note that they of course don't work with
-//! interactive problems, and cannot be mixed with the line-by-line macros in one program.
+//! The old line-by-line macros, `input_interactive!` and `read_value_interactive!`, are
+//! still available but now deprecated, since `input!` and `read_value!` do the same job.
 //!
-//! The usage of those macros are exactly the same with the normal ones. Refer to the document of
+//! If you still want the fastest possible I/O for non-interactive problems, use
+//! `input_once!` and `read_value_once!` instead.  They read the entire input at once,
+//! which is slightly faster than reading line by line.  They do not work with interactive
+//! problems, and cannot be mixed with the line-by-line macros in one program.
+//!
+//! The usage of those macros is the same as the normal ones.  Refer to the documentation of
 //! [input!](input) and [read_value!](read_value) for further information.
 //!
 //! # `#[fastout]`

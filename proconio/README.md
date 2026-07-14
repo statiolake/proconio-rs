@@ -22,4 +22,4 @@ input! {
 println!("{} {} {}", n, m, l);
 ```
 
-For more details, see documentation.
+For more details, see the [documentation](https://docs.rs/proconio).
